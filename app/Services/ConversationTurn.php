@@ -13,7 +13,6 @@ use Laravel\Ai\Models\Conversation;
 use Laravel\Ai\Streaming\Events\TextDelta;
 use Laravel\Ai\Streaming\Events\ToolApprovalRequest;
 use Laravel\Ai\Transcription;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Throwable;
 
 class ConversationTurn
@@ -25,11 +24,11 @@ class ConversationTurn
 
     /**
      * @param  callable(string): void|null  $onDelta
-     * @return array{conversation_id: string|null, transcript: string, response: string, audio_url: string|null, approvals: array<int, array{id: string, tool: string, arguments: array<string, mixed>, reason: string|null}>}
+     * @return array{conversation_id: string|null, transcript: string, response: string, audio_url: string|null, audio_path: string|null, approvals: array<int, array{id: string, tool: string, arguments: array<string, mixed>, reason: string|null}>}
      */
     public function handle(
         ?string $message = null,
-        UploadedFile|TemporaryUploadedFile|null $audio = null,
+        ?UploadedFile $audio = null,
         ?string $audioPath = null,
         ?string $mimeType = null,
         ?string $conversationId = null,
@@ -60,20 +59,23 @@ class ConversationTurn
             throw $exception;
         }
 
+        $spoken = $speak && $result['approvals'] === [] && filled($result['response'])
+            ? $this->synthesize($result['response'])
+            : null;
+
         return [
             'conversation_id' => $result['conversation_id'],
             'transcript' => $transcript,
             'response' => $result['response'],
-            'audio_url' => $speak && $result['approvals'] === [] && filled($result['response'])
-                ? $this->synthesize($result['response'])
-                : null,
+            'audio_url' => $spoken['url'] ?? null,
+            'audio_path' => $spoken['path'] ?? null,
             'approvals' => $result['approvals'],
         ];
     }
 
     /**
      * @param  callable(string): void|null  $onDelta
-     * @return array{conversation_id: string|null, transcript: string, response: string, audio_url: string|null, approvals: array<int, array{id: string, tool: string, arguments: array<string, mixed>, reason: string|null}>}
+     * @return array{conversation_id: string|null, transcript: string, response: string, audio_url: string|null, audio_path: string|null, approvals: array<int, array{id: string, tool: string, arguments: array<string, mixed>, reason: string|null}>}
      */
     public function decide(
         string $conversationId,
@@ -93,13 +95,16 @@ class ConversationTurn
             throw $exception;
         }
 
+        $spoken = $speak && $result['approvals'] === [] && filled($result['response'])
+            ? $this->synthesize($result['response'])
+            : null;
+
         return [
             'conversation_id' => $result['conversation_id'],
             'transcript' => '',
             'response' => $result['response'],
-            'audio_url' => $speak && $result['approvals'] === [] && filled($result['response'])
-                ? $this->synthesize($result['response'])
-                : null,
+            'audio_url' => $spoken['url'] ?? null,
+            'audio_path' => $spoken['path'] ?? null,
             'approvals' => $result['approvals'],
         ];
     }
@@ -166,7 +171,7 @@ class ConversationTurn
     }
 
     private function transcribe(
-        UploadedFile|TemporaryUploadedFile|null $audio,
+        ?UploadedFile $audio,
         ?string $audioPath,
         ?string $mimeType,
     ): string {
@@ -187,7 +192,10 @@ class ConversationTurn
         return '';
     }
 
-    private function synthesize(string $text): ?string
+    /**
+     * @return array{url: string, path: string}|null
+     */
+    private function synthesize(string $text): ?array
     {
         try {
             $audio = Audio::of($text)
@@ -197,7 +205,10 @@ class ConversationTurn
 
             $path = $audio->store('assistant-audio', 'mobile_public');
 
-            return $path ? Storage::disk('mobile_public')->url($path) : null;
+            return $path ? [
+                'url' => Storage::disk('mobile_public')->url($path),
+                'path' => Storage::disk('mobile_public')->path($path),
+            ] : null;
         } catch (Throwable $exception) {
             report($exception);
             Log::warning('Voice synthesis failed; returning text response.', [

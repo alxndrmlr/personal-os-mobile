@@ -4,42 +4,46 @@ namespace Tests\Feature;
 
 use App\Ai\Agents\PersonalAssistant;
 use App\Ai\Tools\ApprovableMcpTool;
-use App\Livewire\Connections;
-use App\Livewire\Voice;
 use App\Models\AgentActivity;
 use App\Models\McpServer;
+use App\NativeComponents\Connections;
+use App\NativeComponents\Voice;
 use App\Services\ConversationTurn;
 use App\Services\PersonalUser;
+use Ikromjon\LocalNotifications\Facades\LocalNotifications;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Ai\Approvals\Decisions;
 use Laravel\Ai\Approvals\PendingApproval;
 use Laravel\Ai\Responses\AgentResponse;
 use Laravel\Ai\Tools\Request;
 use Laravel\Mcp\Client\Primitives\Tool as McpTool;
-use Livewire\Livewire;
 use Mockery;
+use Native\Mobile\AsyncTask;
+use Native\Mobile\Testing\Native;
 use Tests\TestCase;
 
 class McpConnectionsTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function tearDown(): void
+    {
+        AsyncTask::clearFake();
+
+        parent::tearDown();
+    }
+
     public function test_a_server_can_be_added_from_the_connections_screen(): void
     {
-        $this->get('/connections')
-            ->assertOk()
-            ->assertSeeLivewire(Connections::class)
-            ->assertSee('Add server')
-            ->assertSee('Add an MCP URL above');
-
-        Livewire::test(Connections::class)
+        Native::test(Connections::class)
             ->set('name', 'Work')
             ->set('url', 'https://mcp.example.com/mcp')
-            ->set('authType', 'bearer')
+            ->set('authType', 'Bearer token')
             ->set('token', 'secret-token')
             ->call('addServer')
             ->assertSee('Work')
-            ->assertSee('Connected');
+            ->assertSee('Enabled')
+            ->assertAccessible();
 
         $this->assertDatabaseHas('mcp_servers', [
             'slug' => 'work',
@@ -99,8 +103,10 @@ class McpConnectionsTest extends TestCase
                 ),
             ]),
         ]);
+        AsyncTask::fake();
+        LocalNotifications::shouldReceive('schedule')->once()->andReturn([]);
 
-        Livewire::test(Voice::class)
+        Native::test(Voice::class)
             ->set('draft', 'Create the issue')
             ->call('sendText')
             ->assertSet('state', 'awaiting_approval')
@@ -128,11 +134,13 @@ class McpConnectionsTest extends TestCase
                 'transcript' => '',
                 'response' => 'The issue was created.',
                 'audio_url' => null,
+                'audio_path' => null,
                 'approvals' => [],
             ]);
         $this->app->instance(ConversationTurn::class, $turn);
+        AsyncTask::fake();
 
-        Livewire::test(Voice::class)
+        Native::test(Voice::class)
             ->set('conversationId', 'conversation-123')
             ->set('pendingApprovals', [[
                 'id' => 'call_123',

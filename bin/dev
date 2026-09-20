@@ -5,16 +5,12 @@ set -Eeuo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-mode="${1:-web}"
+mode="${1:-jump}"
 if [[ $# -gt 0 ]]; then
     shift
 fi
 
 case "$mode" in
-    web)
-        exec composer run dev -- "$@"
-        ;;
-
     jump)
         exec php artisan native:jump --browser "$@"
         ;;
@@ -39,7 +35,7 @@ case "$mode" in
             php artisan native:install ios
         fi
 
-        exec php artisan native:run ios --watch --vite "$@"
+        exec php artisan native:run ios --watch "$@"
         ;;
 
     ios:install)
@@ -53,11 +49,10 @@ case "$mode" in
 
     *)
         cat >&2 <<'TEXT'
-Usage: ./bin/dev [web|jump|ios|ios:install]
+Usage: ./bin/dev [jump|ios|ios:install]
 
-  web          Laravel, queue, logs, and Vite in the browser
   jump         Preview through the NativePHP Jump phone app
-  ios          Build and run iOS with hot reload and Vite
+  ios          Build and run iOS with native hot reload
   ios:install  Regenerate the iOS project after native plugin changes
 TEXT
         exit 1

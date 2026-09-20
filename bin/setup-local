@@ -59,8 +59,6 @@ write_env() {
 
 require_command php
 require_command composer
-require_command node
-require_command npm
 
 php -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);' \
     || fail "PHP 8.3 or newer is required. Found $(php -r 'echo PHP_VERSION;')."
@@ -68,24 +66,6 @@ php -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);' \
 if [[ ! -f .env ]]; then
     info "Creating .env"
     cp .env.example .env
-fi
-
-if [[ -n "${FLUX_USERNAME:-}" && -n "${FLUX_LICENSE_KEY:-}" ]]; then
-    info "Configuring Flux Pro credentials"
-    composer config --auth http-basic.composer.fluxui.dev "$FLUX_USERNAME" "$FLUX_LICENSE_KEY"
-elif ! composer config --auth --list 2>/dev/null | grep -q 'http-basic\.composer\.fluxui\.dev'; then
-    [[ -t 0 ]] || fail "Set FLUX_USERNAME and FLUX_LICENSE_KEY before running this script."
-
-    printf 'Flux account email: '
-    read -r FLUX_USERNAME
-    printf 'Flux license key: '
-    read -rs FLUX_LICENSE_KEY
-    printf '\n'
-
-    [[ -n "$FLUX_USERNAME" && -n "$FLUX_LICENSE_KEY" ]] \
-        || fail "Both Flux credentials are required."
-
-    composer config --auth http-basic.composer.fluxui.dev "$FLUX_USERNAME" "$FLUX_LICENSE_KEY"
 fi
 
 if [[ -n "${OPENAI_API_KEY:-}" ]]; then
@@ -115,20 +95,16 @@ touch database/database.sqlite
 php artisan migrate --force
 php artisan storage:link --force
 
-info "Installing and building frontend dependencies"
-npm ci
-npm run build
-
-info "Validating NativePHP plugins"
+info "Validating NativePHP components and plugins"
+php artisan native:validate
 php artisan native:plugin:validate
 
 cat <<'TEXT'
 
 Local setup is ready.
 
-  Browser:       ./bin/dev web
-  NativePHP Jump ./bin/dev jump
-  iOS app:       ./bin/dev ios
+  NativePHP Jump: ./bin/dev jump
+  iOS app:        ./bin/dev ios
 
 The iOS command requires Apple silicon, Xcode, CocoaPods, and an iPhone in
 Developer Mode (or a simulator). It installs the generated iOS project on the

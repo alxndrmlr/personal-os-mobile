@@ -1,30 +1,25 @@
 # Personal OS Mobile
 
-A private, single-user voice assistant built with Laravel 13, Livewire, Flux UI,
-the Laravel AI SDK, and NativePHP Mobile. Laravel and SQLite run on the phone;
-recorded audio is sent to the configured AI provider for transcription, an
-agent turn, and speech synthesis.
+A private, single-user voice assistant built with Laravel 13, the Laravel AI
+SDK, and NativePHP Mobile 4. The interface is SuperNative: EDGE Blade templates
+render real SwiftUI on iOS and Jetpack Compose on Android. There is no
+Livewire, Flux, JavaScript, Vite, or app web view.
 
-## What is included
+## Included
 
-- Livewire + Flux Pro UI using the default Flux design system
-- Push-to-talk recording through NativePHP's microphone plugin
-- Browser `MediaRecorder` fallback for local development
-- Laravel AI transcription and text-to-speech
-- Persistent `agent_conversations` and `agent_conversation_messages`
-- A concise personal assistant with a current-time tool
-- Streamed agent replies through Livewire
-- An encrypted MCP server registry managed entirely through the app
-- Human approval before mutating or unannotated MCP tool calls
-- Persistent agent activity with on-device completion and approval notifications
-- A responsive, safe-area-aware phone UI with a landscape/dual-pane layout
-- [iPhone Duo layout research](docs/iphone-duo-research.md) for cover, inner,
-  book, table, and Split View states
-- [Agent notifications and Live Activity architecture](docs/agent-activity-and-notifications.md)
+- Native push-to-talk recording and synthesized-response playback
+- Non-blocking AI turns through NativePHP async tasks
+- Persistent Laravel AI conversations and messages
+- Encrypted, app-managed MCP server connections
+- Human approval for mutating or unannotated MCP tool calls
+- Persistent agent activity and system completion/approval notifications
+- Native tab/navigation chrome, forms, dark mode, and responsive EDGE layouts
+- [iPhone Duo layout research](docs/iphone-duo-research.md)
+- [Agent notification and Live Activity architecture](docs/agent-activity-and-notifications.md)
 
-This first slice is turn-based voice, not a full-duplex realtime audio stream.
-That keeps conversation persistence and tool execution provider-independent
-while leaving room for a dedicated realtime transport later.
+Voice interaction is turn-based rather than full-duplex realtime audio. Agent
+responses currently appear when the complete async turn finishes; restoring
+token-by-token streaming will require a native event transport.
 
 ## First local setup
 
@@ -32,11 +27,7 @@ Requirements:
 
 - PHP 8.3+ with SQLite
 - Composer
-- Node.js 22+ and npm
-- your Flux account email and Flux Pro license key
 - an OpenAI API key
-
-Clone the repository and run the setup script:
 
 ```bash
 git clone https://github.com/alxndrmlr/personal-os-mobile.git
@@ -44,35 +35,19 @@ cd personal-os-mobile
 ./bin/setup-local
 ```
 
-The script securely prompts for the Flux and OpenAI credentials, creates
-`.env`, installs PHP and JavaScript dependencies, generates `APP_KEY`, prepares
-SQLite, runs migrations, builds assets, links storage, and validates the
-NativePHP plugins.
+The script prompts securely for the OpenAI key, creates `.env`, installs PHP
+dependencies, generates `APP_KEY`, prepares SQLite, runs migrations, links
+storage, and validates the native components and plugins.
 
-For a non-interactive setup, pass credentials as environment variables:
-
-```bash
-FLUX_USERNAME="you@example.com" \
-FLUX_LICENSE_KEY="..." \
-OPENAI_API_KEY="..." \
-./bin/setup-local
-```
-
-Flux credentials are written to the gitignored Composer `auth.json`; the OpenAI
-key is written to the gitignored `.env`. Do not put either value in a committed
-file or a shell script.
-
-## Start development
-
-### Browser
+For non-interactive setup:
 
 ```bash
-./bin/dev web
+OPENAI_API_KEY="..." ./bin/setup-local
 ```
 
-This runs Laravel, the on-device-style database queue, logs, and Vite together.
-Open `http://localhost:8000`. Browser recording uses `MediaRecorder`, so this is
-the quickest way to inspect the Livewire and Flux UI.
+The key is written only to the gitignored `.env`.
+
+## Run the app
 
 ### NativePHP Jump
 
@@ -80,98 +55,91 @@ the quickest way to inspect the Livewire and Flux UI.
 ./bin/dev jump
 ```
 
-Install the free NativePHP Jump app on the phone and scan the displayed QR code.
-Jump is useful for a quick device preview without Xcode. It includes first-party
-plugins such as the microphone, but not this project's third-party local
-notifications plugin. Use a compiled iOS build to test system notifications.
+Install the free NativePHP Jump app and scan the QR code. Jump is useful for
+iterating on the SuperNative screens without opening Xcode. A compiled app is
+still required to verify every third-party plugin, including local
+notifications and media playback.
 
 ### Compiled iOS app
 
-This requires an Apple silicon Mac, Xcode, CocoaPods, and either an iPhone in
-Developer Mode or an iOS Simulator. Set a unique bundle ID in `.env` first:
+An iOS build requires an Apple silicon Mac, Xcode, CocoaPods, and an iPhone in
+Developer Mode or an iOS Simulator. Set a unique bundle ID first:
 
 ```dotenv
 NATIVEPHP_APP_ID=com.yourname.personalos
+NATIVEPHP_DEEPLINK_SCHEME=personalos
 ```
 
-Then run:
+Then:
 
 ```bash
 ./bin/dev ios
 ```
 
-On its first run this generates the ephemeral iOS project, then opens the
-device/simulator selection and starts NativePHP with hot reload and Vite. The
-microphone and local-notification plugins are already registered in
-`app/Providers/NativeServiceProvider.php`; no additional registration command
-is needed.
-
-If a native plugin or its Swift/Kotlin code changes, regenerate the native
-project before running again:
+The first run generates the ephemeral iOS project and then launches the app
+with native hot reload. After changing a native plugin or its Swift/Kotlin
+code, regenerate the project:
 
 ```bash
 ./bin/dev ios:install
 ./bin/dev ios
 ```
 
+The registered native plugins are:
+
+- `nativephp/mobile-ui`
+- `nativephp/mobile-microphone`
+- `nativephp/mobile-media-player`
+- `ikromjon/nativephp-mobile-local-notifications`
+
 ## MCP connections and approvals
 
-Open **Connections** from the voice screen and enter a name, Streamable HTTP
-MCP URL, authentication method, and approval policy. There is no built-in
-provider catalog. Bearer tokens, OAuth tokens, refresh tokens, and OAuth client
-credentials use Laravel's encrypted model casts before they are written to
-SQLite.
+Open the native **Connections** tab and enter a Streamable HTTP endpoint,
+authentication method, and approval policy. No providers are preconfigured.
+Bearer tokens, OAuth tokens, refresh tokens, and OAuth client credentials use
+Laravel encrypted casts before being written to SQLite.
 
-OAuth servers that support dynamic client registration need only their URL.
-Other servers may require a client ID, secret, or scopes after the connection
-is added. The connection detail view shows the exact callback URL to register
-with that provider.
+The default **Writes and unknown** policy trusts only tools whose MCP
+annotations explicitly set `readOnlyHint: true`. Write tools and unannotated
+tools pause the AI conversation and show their arguments for approval.
+**Every tool call** is safest for an untrusted server. **Never** should only be
+used for a server you fully control.
 
-OAuth callbacks are generated from `APP_URL`. It must be the URL that the
-provider can redirect back to. Local web development can use a trusted HTTPS
-tunnel; the NativePHP build must preserve a callback URL that returns to its
-embedded Laravel server or a future native deep-link bridge.
+OAuth still needs a callback URL reachable by the provider. For a purely
+on-device install, use bearer tokens where supported until the callback is
+hosted on a small companion backend or NativePHP exposes deep-link query
+parameters directly to a native screen.
 
-The default **Writes** policy trusts only tools whose MCP annotations explicitly
-set `readOnlyHint: true`; write tools and tools without that annotation pause
-the Laravel AI conversation and show their exact arguments for approval. Use
-**Always** for an untrusted server. **Never** should only be used for a server
-you fully control.
-
-Run the checks with:
+## Checks
 
 ```bash
 composer test
-npm run build
+php artisan native:validate
+php artisan native:plugin:validate
 vendor/bin/pint --test
 ```
 
-## iPhone notes
+The Linux cloud environment can run Laravel and native component tests, but
+Apple only permits generating and compiling the iOS shell on macOS.
 
-Choose your simulator or connected iPhone when prompted. NativePHP generates
-the ephemeral `nativephp/ios` project during installation; do not hand-edit it.
-The microphone purpose string is configured in `config/nativephp.php`. Tap
-**Enable system notifications** in the agent activity card once after
-installing.
+## Security
 
-The Linux development environment can build and test Laravel and the web UI,
-but Apple does not permit generating or compiling the iOS shell outside macOS.
+NativePHP bundles the application environment into the app. An OpenAI key in a
+private, personally installed build can still be extracted by someone with
+access to the app bundle. Route AI calls through a server-side proxy before
+distributing the app.
 
-NativePHP bundles the application's environment into the IPA. Using
-`OPENAI_API_KEY` directly is reasonable for a private, personally installed
-build, but the key can be extracted from the app. Route AI calls through a
-server-side proxy before distributing the app to anyone else.
+No login flow is included by design. Anyone with access to the unlocked app has
+access to its conversations, so the device passcode/Face ID is the current
+security boundary.
 
 ## Configuration
 
 | Variable | Purpose |
 | --- | --- |
-| `OPENAI_API_KEY` | Default agent, transcription, and speech provider |
-| `PERSONAL_USER_NAME` | Name for the on-device conversation participant |
+| `OPENAI_API_KEY` | Agent, transcription, and speech provider |
+| `PERSONAL_USER_NAME` | On-device conversation participant |
 | `PERSONAL_USER_EMAIL` | Stable identity for persisted conversations |
 | `PERSONAL_ASSISTANT_VOICE` | Laravel AI speech voice |
 | `NATIVEPHP_APP_ID` | Reverse-domain iOS bundle identifier |
-
-No login flow is included by design. Anyone with access to the unlocked app has
-access to its conversations, so device passcode/Face ID remains the security
-boundary until app-level biometric locking is added.
+| `NATIVEPHP_DEEPLINK_SCHEME` | Custom URL scheme for native callbacks |

@@ -48,7 +48,7 @@ return [
         ],
 
         // NativePHP replaces this URL with its internal asset route on-device.
-        // Keeping a web fallback lets local Livewire development serve generated audio.
+        // The local path is also passed directly to the native media player.
         'mobile_public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
