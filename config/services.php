@@ -2,11 +2,6 @@
 
 return [
 
-    'personal_mcp' => [
-        'url' => env('PERSONAL_MCP_URL'),
-        'token' => env('PERSONAL_MCP_TOKEN'),
-    ],
-
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

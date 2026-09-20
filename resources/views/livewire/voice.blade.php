@@ -52,15 +52,10 @@
             </div>
         @endforelse
 
-        <article class="mb-5 max-w-[88%] empty:hidden">
-            <flux:text class="mb-1.5 ml-1 text-[.68rem] font-bold uppercase tracking-[.08em] text-zinc-500">
-                Assistant
-            </flux:text>
-            <p
-                wire:stream="assistant-response"
-                class="m-0 whitespace-pre-wrap rounded-[1.15rem] rounded-bl-sm border border-accent/20 bg-zinc-900 px-4 py-3.5 leading-6 text-zinc-100 empty:hidden"
-            ></p>
-        </article>
+        <p
+            wire:stream="assistant-response"
+            class="mb-5 max-w-[88%] whitespace-pre-wrap rounded-[1.15rem] rounded-bl-sm border border-accent/20 bg-zinc-900 px-4 py-3.5 leading-6 text-zinc-100 empty:hidden"
+        ></p>
 
         @if ($pendingApprovals !== [])
             <div class="mt-6 space-y-3" aria-label="Tool approvals">

@@ -230,6 +230,13 @@ class Voice extends Component
         ?string $audioPath = null,
         ?string $mimeType = null,
     ): void {
+        if ($this->pendingApprovals !== []) {
+            $this->state = 'awaiting_approval';
+            $this->status = 'Review the requested action first';
+
+            return;
+        }
+
         $this->state = 'thinking';
         $this->status = 'Thinking…';
 

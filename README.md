@@ -13,7 +13,9 @@ agent turn, and speech synthesis.
 - Laravel AI transcription and text-to-speech
 - Persistent `agent_conversations` and `agent_conversation_messages`
 - A concise personal assistant with a current-time tool
-- Optional remote MCP tools via `PERSONAL_MCP_URL`
+- Streamed agent replies through Livewire
+- Encrypted MCP connections for Linear, Backbone, Slack, Notion, and custom servers
+- Human approval before mutating or unannotated MCP tool calls
 - A responsive, safe-area-aware phone UI with a landscape/dual-pane layout
 - [iPhone Duo layout research](docs/iphone-duo-research.md) for cover, inner,
   book, table, and Split View states
@@ -44,6 +46,33 @@ Use your Flux account email as `FLUX_USERNAME` and license key as
 
 Set `OPENAI_API_KEY` in `.env`. Open `http://localhost:8000`; the browser can
 record audio after microphone permission is granted.
+
+## MCP connections and approvals
+
+Open **Connections** from the voice screen. Add one of the built-in presets or
+register a custom Streamable HTTP MCP endpoint. Bearer tokens, OAuth tokens,
+refresh tokens, and OAuth client credentials use Laravel's encrypted model
+casts before they are written to SQLite.
+
+- Linear uses `https://mcp.linear.app/mcp` and supports dynamic OAuth client
+  registration.
+- Notion uses `https://mcp.notion.com/mcp` and requires interactive OAuth.
+- Slack uses `https://mcp.slack.com/mcp`. Create a Slack app, add this app's
+  displayed OAuth callback URL to its redirect URLs, then save the Slack client
+  ID and secret before authorizing.
+- Backbone uses `https://backbone.govai.com/mcp`. Its public authentication
+  contract is not discoverable, so the preset starts in bearer-token mode.
+
+OAuth callbacks are generated from `APP_URL`. It must be the URL that the
+provider can redirect back to. Local web development can use a trusted HTTPS
+tunnel; the NativePHP build must preserve a callback URL that returns to its
+embedded Laravel server or a future native deep-link bridge.
+
+The default **Writes** policy trusts only tools whose MCP annotations explicitly
+set `readOnlyHint: true`; write tools and tools without that annotation pause
+the Laravel AI conversation and show their exact arguments for approval. Use
+**Always** for an untrusted server. **Never** should only be used for a server
+you fully control.
 
 Run the checks with:
 
@@ -86,8 +115,6 @@ server-side proxy before distributing the app to anyone else.
 | `PERSONAL_USER_NAME` | Name for the on-device conversation participant |
 | `PERSONAL_USER_EMAIL` | Stable identity for persisted conversations |
 | `PERSONAL_ASSISTANT_VOICE` | Laravel AI speech voice |
-| `PERSONAL_MCP_URL` | Optional remote MCP server |
-| `PERSONAL_MCP_TOKEN` | Optional bearer token for the MCP server |
 | `NATIVEPHP_APP_ID` | Reverse-domain iOS bundle identifier |
 
 No login flow is included by design. Anyone with access to the unlocked app has
