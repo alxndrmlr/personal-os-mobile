@@ -3,12 +3,14 @@
 namespace Tests\Feature;
 
 use App\Ai\Agents\PersonalAssistant;
+use App\Livewire\Voice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Ai\Audio;
 use Laravel\Ai\Models\Conversation;
 use Laravel\Ai\Transcription;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class VoiceConversationTest extends TestCase
@@ -19,6 +21,7 @@ class VoiceConversationTest extends TestCase
     {
         $this->get('/')
             ->assertOk()
+            ->assertSeeLivewire(Voice::class)
             ->assertSee('Ready when you are.')
             ->assertSee('Tap to speak');
     }
@@ -29,15 +32,14 @@ class VoiceConversationTest extends TestCase
         PersonalAssistant::fake(['It is 8:15 PM.']);
         Audio::fake([base64_encode('fake audio')]);
 
-        $response = $this->postJson('/voice/turn', [
-            'message' => 'What time is it?',
-            'speak' => true,
-        ]);
-
-        $response->assertOk()
-            ->assertJsonPath('transcript', 'What time is it?')
-            ->assertJsonPath('response', 'It is 8:15 PM.')
-            ->assertJsonStructure(['conversation_id', 'audio_url']);
+        Livewire::test(Voice::class)
+            ->set('draft', 'What time is it?')
+            ->call('sendText')
+            ->assertSet('draft', '')
+            ->assertSet('status', 'Tap to speak')
+            ->assertSee('What time is it?')
+            ->assertSee('It is 8:15 PM.')
+            ->assertDispatched('assistant-spoken');
 
         $this->assertDatabaseCount('agent_conversations', 1);
         $this->assertDatabaseCount('agent_conversation_messages', 2);
@@ -51,14 +53,10 @@ class VoiceConversationTest extends TestCase
         $audio = UploadedFile::fake()->create('voice.m4a', 64, 'audio/m4a');
         file_put_contents($audio->getRealPath(), 'fake audio bytes');
 
-        $response = $this->post('/voice/turn', [
-            'audio' => $audio,
-            'speak' => false,
-        ], ['Accept' => 'application/json']);
-
-        $response->assertOk()
-            ->assertJsonPath('transcript', 'What is on my calendar tomorrow?')
-            ->assertJsonPath('audio_url', null);
+        Livewire::test(Voice::class)
+            ->set('recording', $audio)
+            ->assertSee('What is on my calendar tomorrow?')
+            ->assertSee('You asked about tomorrow.');
 
         PersonalAssistant::assertPrompted('What is on my calendar tomorrow?');
     }
@@ -67,10 +65,22 @@ class VoiceConversationTest extends TestCase
     {
         PersonalAssistant::fake(['No.']);
 
-        $this->postJson('/voice/turn', [
-            'message' => 'Continue',
-            'conversation_id' => fake()->uuid(),
-            'speak' => false,
-        ])->assertNotFound();
+        Livewire::test(Voice::class)
+            ->set('conversationId', fake()->uuid())
+            ->set('draft', 'Continue')
+            ->call('sendText')
+            ->assertStatus(404);
+    }
+
+    public function test_an_empty_text_turn_is_ignored(): void
+    {
+        PersonalAssistant::fake(['Nope.']);
+
+        Livewire::test(Voice::class)
+            ->set('draft', '   ')
+            ->call('sendText')
+            ->assertSee('Ready when you are.');
+
+        PersonalAssistant::assertNeverPrompted();
     }
 }

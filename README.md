@@ -1,13 +1,14 @@
 # Personal OS Mobile
 
-A private, single-user voice assistant built with Laravel 13, the Laravel AI
-SDK, and NativePHP Mobile. Laravel and SQLite run on the phone; recorded audio
-is sent directly to the configured AI provider for transcription, an agent
-turn, and speech synthesis.
+A private, single-user voice assistant built with Laravel 13, Livewire, Flux UI,
+the Laravel AI SDK, and NativePHP Mobile. Laravel and SQLite run on the phone;
+recorded audio is sent to the configured AI provider for transcription, an
+agent turn, and speech synthesis.
 
 ## What is included
 
-- Push-to-talk recording through NativePHP's microphone bridge
+- Livewire + Flux Pro UI, themed to the Personal OS dark mint palette
+- Push-to-talk recording through NativePHP's microphone plugin
 - Browser `MediaRecorder` fallback for local development
 - Laravel AI transcription and text-to-speech
 - Persistent `agent_conversations` and `agent_conversation_messages`
@@ -25,6 +26,7 @@ Requirements: PHP 8.4, Composer, Node.js 22+, and an OpenAI API key.
 
 ```bash
 cp .env.example .env
+composer config http-basic.composer.fluxui.dev "$FLUX_USERNAME" "$FLUX_LICENSE_KEY"
 composer install
 php artisan key:generate
 touch database/database.sqlite
@@ -33,6 +35,10 @@ npm install
 npm run build
 php artisan serve
 ```
+
+Flux Pro is authenticated via a local `auth.json` file (already gitignored).
+Use your Flux account email as `FLUX_USERNAME` and license key as
+`FLUX_LICENSE_KEY`. Never commit those values.
 
 Set `OPENAI_API_KEY` in `.env`. Open `http://localhost:8000`; the browser can
 record audio after microphone permission is granted.

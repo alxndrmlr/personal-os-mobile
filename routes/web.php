@@ -1,7 +1,6 @@
 <?php
 
-use App\Http\Controllers\VoiceController;
+use App\Livewire\Voice;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [VoiceController::class, 'index'])->name('voice.index');
-Route::post('/voice/turn', [VoiceController::class, 'turn'])->name('voice.turn');
+Route::get('/', Voice::class)->name('voice.index');

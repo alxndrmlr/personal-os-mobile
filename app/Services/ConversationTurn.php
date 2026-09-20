@@ -1,54 +1,37 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Services;
 
 use App\Ai\Agents\PersonalAssistant;
-use App\Services\PersonalUser;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Illuminate\View\View;
 use Laravel\Ai\Audio;
 use Laravel\Ai\Models\Conversation;
 use Laravel\Ai\Transcription;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Throwable;
 
-class VoiceController extends Controller
+class ConversationTurn
 {
     public function __construct(private readonly PersonalUser $personalUser) {}
 
-    public function index(): View
-    {
-        $user = $this->personalUser->get();
-        $conversation = Conversation::query()
-            ->where('participant_type', Conversation::participantType($user))
-            ->where('participant_id', $user->getKey())
-            ->latest('updated_at')
-            ->first();
-
-        return view('voice', [
-            'conversation' => $conversation,
-            'messages' => $conversation?->messages()->oldest()->get() ?? collect(),
-        ]);
-    }
-
-    public function turn(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'audio' => ['nullable', 'file', 'mimetypes:audio/m4a,audio/mp4,audio/mpeg,audio/wav,audio/x-wav,audio/webm', 'max:25600'],
-            'audio_path' => ['nullable', 'string', 'max:4096'],
-            'mime_type' => ['nullable', 'string', 'max:100'],
-            'message' => ['nullable', 'string', 'max:12000'],
-            'conversation_id' => ['nullable', 'uuid'],
-            'speak' => ['nullable', 'boolean'],
-        ]);
-
-        $transcript = trim((string) ($validated['message'] ?? ''));
+    /**
+     * @return array{conversation_id: string|null, transcript: string, response: string, audio_url: string|null}
+     */
+    public function handle(
+        ?string $message = null,
+        UploadedFile|TemporaryUploadedFile|null $audio = null,
+        ?string $audioPath = null,
+        ?string $mimeType = null,
+        ?string $conversationId = null,
+        bool $speak = true,
+    ): array {
+        $transcript = trim((string) $message);
 
         if ($transcript === '') {
-            $transcript = $this->transcribe($request, $validated);
+            $transcript = $this->transcribe($audio, $audioPath, $mimeType);
         }
 
         if ($transcript === '') {
@@ -60,7 +43,7 @@ class VoiceController extends Controller
         $user = $this->personalUser->get();
         $assistant = new PersonalAssistant;
 
-        if ($conversationId = $validated['conversation_id'] ?? null) {
+        if ($conversationId) {
             $belongsToUser = Conversation::query()
                 ->whereKey($conversationId)
                 ->where('participant_type', Conversation::participantType($user))
@@ -74,40 +57,32 @@ class VoiceController extends Controller
         }
 
         $response = $assistant->prompt($transcript);
-        $audioUrl = null;
 
-        if ($request->boolean('speak', true)) {
-            $audioUrl = $this->synthesize((string) $response);
-        }
-
-        return response()->json([
+        return [
             'conversation_id' => $response->conversationId,
             'transcript' => $transcript,
             'response' => (string) $response,
-            'audio_url' => $audioUrl,
-        ]);
+            'audio_url' => $speak ? $this->synthesize((string) $response) : null,
+        ];
     }
 
-    /**
-     * @param  array<string, mixed>  $validated
-     */
-    private function transcribe(Request $request, array $validated): string
-    {
-        if ($request->hasFile('audio')) {
-            return trim((string) Transcription::fromUpload($request->file('audio'))->generate());
+    private function transcribe(
+        UploadedFile|TemporaryUploadedFile|null $audio,
+        ?string $audioPath,
+        ?string $mimeType,
+    ): string {
+        if ($audio) {
+            return trim((string) Transcription::fromUpload($audio)->generate());
         }
 
-        if ($path = $validated['audio_path'] ?? null) {
-            if (! is_file($path) || ! is_readable($path)) {
+        if ($audioPath) {
+            if (! is_file($audioPath) || ! is_readable($audioPath)) {
                 throw ValidationException::withMessages([
                     'audio_path' => 'The native recording could not be read.',
                 ]);
             }
 
-            return trim((string) Transcription::fromPath(
-                $path,
-                $validated['mime_type'] ?? null,
-            )->generate());
+            return trim((string) Transcription::fromPath($audioPath, $mimeType)->generate());
         }
 
         return '';
