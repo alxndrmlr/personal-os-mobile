@@ -35,7 +35,10 @@ class ApprovableMcpTool extends McpTool implements Approvable
     {
         $server = Str::of($this->serverSlug)->snake()->replaceMatches('/[^a-z0-9_]/', '')->limit(16, '');
         $tool = Str::of($this->tool->name)->snake()->replaceMatches('/[^a-z0-9_]/', '');
+        $name = "mcp_{$server}_{$tool}";
 
-        return Str::limit("mcp_{$server}_{$tool}", 64, '');
+        return strlen($name) <= 64
+            ? $name
+            : substr($name, 0, 55).'_'.substr(hash('xxh3', $name), 0, 8);
     }
 }

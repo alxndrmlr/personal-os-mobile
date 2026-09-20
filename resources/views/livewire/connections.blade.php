@@ -127,6 +127,10 @@
                                 label="OAuth scopes"
                                 placeholder="{{ $server->oauth_scope ?: 'Provider defaults' }}"
                             />
+                            <div class="rounded-xl border border-white/10 bg-black/20 p-3">
+                                <flux:text class="text-xs font-semibold text-zinc-400">OAuth callback URL</flux:text>
+                                <code class="mt-1 block break-all text-xs text-zinc-500">{{ route('connections.oauth.callback', $server->slug) }}</code>
+                            </div>
                             <div class="grid gap-2 sm:grid-cols-2">
                                 <flux:button wire:click="saveCredentials({{ $server->id }})">Save OAuth settings</flux:button>
                                 <flux:button

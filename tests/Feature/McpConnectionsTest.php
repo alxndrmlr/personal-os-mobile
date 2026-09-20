@@ -7,13 +7,16 @@ use App\Ai\Tools\ApprovableMcpTool;
 use App\Livewire\Connections;
 use App\Livewire\Voice;
 use App\Models\McpServer;
+use App\Services\ConversationTurn;
 use App\Services\PersonalUser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Ai\Approvals\PendingApproval;
+use Laravel\Ai\Approvals\Decisions;
 use Laravel\Ai\Responses\AgentResponse;
 use Laravel\Ai\Tools\Request;
 use Laravel\Mcp\Client\Primitives\Tool as McpTool;
 use Livewire\Livewire;
+use Mockery;
 use Tests\TestCase;
 
 class McpConnectionsTest extends TestCase
@@ -100,6 +103,39 @@ class McpConnectionsTest extends TestCase
             ->assertSet('pendingApprovals.0.id', 'call_123')
             ->assertSee('Review requested actions')
             ->assertSee('Ship the mobile app');
+    }
+
+    public function test_a_human_decision_is_sent_back_to_the_paused_conversation(): void
+    {
+        $turn = Mockery::mock(ConversationTurn::class);
+        $turn->shouldReceive('decide')
+            ->once()
+            ->withArgs(function (string $conversationId, Decisions $decisions): bool {
+                return $conversationId === 'conversation-123'
+                    && $decisions->get('call_123')->isApproved();
+            })
+            ->andReturn([
+                'conversation_id' => 'conversation-123',
+                'transcript' => '',
+                'response' => 'The issue was created.',
+                'audio_url' => null,
+                'approvals' => [],
+            ]);
+        $this->app->instance(ConversationTurn::class, $turn);
+
+        Livewire::test(Voice::class)
+            ->set('conversationId', 'conversation-123')
+            ->set('pendingApprovals', [[
+                'id' => 'call_123',
+                'tool' => 'mcp_linear_create_issue',
+                'arguments' => ['title' => 'Ship it'],
+                'reason' => 'This may change data in Linear.',
+            ]])
+            ->call('chooseApproval', 'call_123', 'approve')
+            ->call('submitApprovals')
+            ->assertSet('state', 'idle')
+            ->assertSet('pendingApprovals', [])
+            ->assertSee('The issue was created.');
     }
 
     private function tool(string $name, array $annotations = []): McpTool
