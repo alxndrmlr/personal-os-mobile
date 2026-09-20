@@ -7,8 +7,11 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Laravel\Ai\Approvals\Decisions;
 use Laravel\Ai\Audio;
 use Laravel\Ai\Models\Conversation;
+use Laravel\Ai\Streaming\Events\TextDelta;
+use Laravel\Ai\Streaming\Events\ToolApprovalRequest;
 use Laravel\Ai\Transcription;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Throwable;
@@ -18,7 +21,8 @@ class ConversationTurn
     public function __construct(private readonly PersonalUser $personalUser) {}
 
     /**
-     * @return array{conversation_id: string|null, transcript: string, response: string, audio_url: string|null}
+     * @param  callable(string): void|null  $onDelta
+     * @return array{conversation_id: string|null, transcript: string, response: string, audio_url: string|null, approvals: array<int, array{id: string, tool: string, arguments: array<string, mixed>, reason: string|null}>}
      */
     public function handle(
         ?string $message = null,
@@ -27,6 +31,7 @@ class ConversationTurn
         ?string $mimeType = null,
         ?string $conversationId = null,
         bool $speak = true,
+        ?callable $onDelta = null,
     ): array {
         $transcript = trim((string) $message);
 
@@ -40,29 +45,101 @@ class ConversationTurn
             ]);
         }
 
+        $assistant = $this->assistant($conversationId);
+        $result = $this->prompt($assistant, $transcript, $onDelta);
+
+        return [
+            'conversation_id' => $result['conversation_id'],
+            'transcript' => $transcript,
+            'response' => $result['response'],
+            'audio_url' => $speak && $result['approvals'] === [] && filled($result['response'])
+                ? $this->synthesize($result['response'])
+                : null,
+            'approvals' => $result['approvals'],
+        ];
+    }
+
+    /**
+     * @param  callable(string): void|null  $onDelta
+     * @return array{conversation_id: string|null, transcript: string, response: string, audio_url: string|null, approvals: array<int, array{id: string, tool: string, arguments: array<string, mixed>, reason: string|null}>}
+     */
+    public function decide(
+        string $conversationId,
+        Decisions $decisions,
+        bool $speak = true,
+        ?callable $onDelta = null,
+    ): array {
+        $result = $this->prompt($this->assistant($conversationId), $decisions, $onDelta);
+
+        return [
+            'conversation_id' => $result['conversation_id'],
+            'transcript' => '',
+            'response' => $result['response'],
+            'audio_url' => $speak && $result['approvals'] === [] && filled($result['response'])
+                ? $this->synthesize($result['response'])
+                : null,
+            'approvals' => $result['approvals'],
+        ];
+    }
+
+    private function assistant(?string $conversationId): PersonalAssistant
+    {
         $user = $this->personalUser->get();
         $assistant = new PersonalAssistant;
 
-        if ($conversationId) {
-            $belongsToUser = Conversation::query()
-                ->whereKey($conversationId)
-                ->where('participant_type', Conversation::participantType($user))
-                ->where('participant_id', $user->getKey())
-                ->exists();
-
-            abort_unless($belongsToUser, 404);
-            $assistant->continue($conversationId, $user);
-        } else {
-            $assistant->forUser($user);
+        if (! $conversationId) {
+            return $assistant->forUser($user);
         }
 
-        $response = $assistant->prompt($transcript);
+        $belongsToUser = Conversation::query()
+            ->whereKey($conversationId)
+            ->where('participant_type', Conversation::participantType($user))
+            ->where('participant_id', $user->getKey())
+            ->exists();
+
+        abort_unless($belongsToUser, 404);
+
+        return $assistant->continue($conversationId, $user);
+    }
+
+    /**
+     * @param  callable(string): void|null  $onDelta
+     * @return array{conversation_id: string|null, response: string, approvals: array<int, array{id: string, tool: string, arguments: array<string, mixed>, reason: string|null}>}
+     */
+    private function prompt(PersonalAssistant $assistant, string|Decisions $prompt, ?callable $onDelta): array
+    {
+        if (! $onDelta) {
+            $response = $assistant->prompt($prompt);
+
+            return [
+                'conversation_id' => $response->conversationId,
+                'response' => (string) $response,
+                'approvals' => $response->pendingApprovals
+                    ->map->toArray()
+                    ->values()
+                    ->all(),
+            ];
+        }
+
+        $stream = $assistant->stream($prompt);
+
+        foreach ($stream as $event) {
+            if ($event instanceof TextDelta) {
+                $onDelta($event->delta);
+            }
+        }
+
+        $approvals = $stream->events
+            ->whereInstanceOf(ToolApprovalRequest::class)
+            ->flatMap(fn (ToolApprovalRequest $event) => $event->pendingApprovals)
+            ->map->toArray()
+            ->values()
+            ->all();
 
         return [
-            'conversation_id' => $response->conversationId,
-            'transcript' => $transcript,
-            'response' => (string) $response,
-            'audio_url' => $speak ? $this->synthesize((string) $response) : null,
+            'conversation_id' => $stream->conversationId,
+            'response' => $stream->text ?? '',
+            'approvals' => $approvals,
         ];
     }
 

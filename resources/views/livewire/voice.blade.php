@@ -16,7 +16,15 @@
             <flux:heading size="lg" level="1">Voice</flux:heading>
         </div>
 
-        <flux:badge color="emerald" variant="solid" icon="lock-closed" rounded class="ml-auto">Private</flux:badge>
+        <flux:button
+            href="{{ route('connections.index') }}"
+            variant="ghost"
+            icon="squares-plus"
+            square
+            class="ml-auto"
+            aria-label="Manage MCP connections"
+        />
+        <flux:badge color="emerald" variant="solid" icon="lock-closed" rounded>Private</flux:badge>
     </header>
 
     <section class="min-h-0 overflow-y-auto py-5 [scrollbar-width:none] lg:col-start-2 lg:row-start-2 [&::-webkit-scrollbar]:hidden" aria-live="polite" aria-label="Conversation">
@@ -43,6 +51,61 @@
                 <flux:text class="mt-1.5 max-w-xs text-zinc-400">Tap once to speak. Tap again when you’re done.</flux:text>
             </div>
         @endforelse
+
+        <article class="mb-5 max-w-[88%] empty:hidden">
+            <flux:text class="mb-1.5 ml-1 text-[.68rem] font-bold uppercase tracking-[.08em] text-zinc-500">
+                Assistant
+            </flux:text>
+            <p
+                wire:stream="assistant-response"
+                class="m-0 whitespace-pre-wrap rounded-[1.15rem] rounded-bl-sm border border-accent/20 bg-zinc-900 px-4 py-3.5 leading-6 text-zinc-100 empty:hidden"
+            ></p>
+        </article>
+
+        @if ($pendingApprovals !== [])
+            <div class="mt-6 space-y-3" aria-label="Tool approvals">
+                <div class="flex items-center gap-2">
+                    <flux:icon.shield-check class="size-5 text-amber-300" />
+                    <flux:heading size="sm">Review requested actions</flux:heading>
+                </div>
+
+                @foreach ($pendingApprovals as $approval)
+                    <article wire:key="approval-{{ $approval['id'] }}" class="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4">
+                        <flux:text class="text-xs font-bold uppercase tracking-wide text-amber-200">
+                            {{ str($approval['tool'])->replace('_', ' ')->headline() }}
+                        </flux:text>
+                        <flux:text class="mt-1 text-sm text-zinc-300">
+                            {{ $approval['reason'] ?: 'This connected tool wants to perform an action.' }}
+                        </flux:text>
+                        <pre class="mt-3 max-h-36 overflow-auto whitespace-pre-wrap break-words rounded-xl bg-black/25 p-3 text-xs leading-5 text-zinc-400">{{ json_encode($approval['arguments'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                        <div class="mt-3 grid grid-cols-2 gap-2">
+                            <flux:button
+                                size="sm"
+                                variant="{{ ($approvalChoices[$approval['id']] ?? null) === 'reject' ? 'danger' : 'ghost' }}"
+                                wire:click="chooseApproval('{{ $approval['id'] }}', 'reject')"
+                            >
+                                Deny
+                            </flux:button>
+                            <flux:button
+                                size="sm"
+                                variant="{{ ($approvalChoices[$approval['id']] ?? null) === 'approve' ? 'primary' : 'ghost' }}"
+                                wire:click="chooseApproval('{{ $approval['id'] }}', 'approve')"
+                            >
+                                Allow
+                            </flux:button>
+                        </div>
+                    </article>
+                @endforeach
+
+                @error('approvals')
+                    <flux:text class="text-sm text-red-400">{{ $message }}</flux:text>
+                @enderror
+
+                <flux:button wire:click="submitApprovals" variant="primary" class="w-full">
+                    Continue
+                </flux:button>
+            </div>
+        @endif
     </section>
 
     <section class="flex flex-col items-center border-t border-white/10 pt-4 lg:col-start-1 lg:row-start-2 lg:justify-center lg:border-t-0 lg:border-r lg:pr-8" aria-label="Voice controls">
@@ -58,6 +121,7 @@
             icon="{{ $state === 'recording' ? 'stop' : 'microphone' }}"
             square
             :loading="$state === 'thinking'"
+            :disabled="$state === 'awaiting_approval'"
             wire:click="toggleRecording"
             aria-label="{{ $state === 'recording' ? 'Stop recording' : 'Start recording' }}"
         />
