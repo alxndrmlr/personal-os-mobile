@@ -1,139 +1,139 @@
 <main
-    class="mx-auto min-h-dvh w-full max-w-3xl px-[max(1.25rem,env(safe-area-inset-right))] pb-[max(2rem,env(safe-area-inset-bottom))] pl-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1rem,env(safe-area-inset-top))]"
+    class="mx-auto min-h-dvh w-full max-w-2xl px-[max(1rem,env(safe-area-inset-right))] pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pt-[max(1rem,env(safe-area-inset-top))]"
     x-data="{ notice: '' }"
     x-on:connection-tested.window="notice = $event.detail.message; setTimeout(() => notice = '', 3500)"
 >
-    <header class="mb-8 flex items-center gap-3">
+    <header class="mb-6 flex items-center gap-3">
         <flux:button href="{{ route('voice.index') }}" variant="ghost" icon="arrow-left" square aria-label="Back to voice" />
         <div>
-            <flux:text class="text-[.68rem] font-bold uppercase tracking-[.14em] text-zinc-400">Personal OS</flux:text>
             <flux:heading size="xl" level="1">Connections</flux:heading>
+            <flux:text>Remote MCP servers available to your assistant.</flux:text>
         </div>
-        <flux:badge color="emerald" variant="outline" rounded class="ml-auto">MCP</flux:badge>
     </header>
 
-    <flux:callout
-        x-show="notice"
-        x-cloak
-        variant="success"
-        icon="check-circle"
-        class="mb-5"
-        x-text="notice"
-    />
+    <flux:callout x-show="notice" x-cloak variant="success" icon="check-circle" class="mb-4" x-text="notice" />
 
-    <section aria-labelledby="quick-connect">
-        <flux:heading id="quick-connect" size="lg">Quick connect</flux:heading>
-        <flux:text class="mt-1 text-zinc-400">Official hosted endpoints plus your Backbone gateway.</flux:text>
+    <flux:fieldset>
+        <flux:legend>Add server</flux:legend>
 
-        <div class="mt-4 grid gap-3 sm:grid-cols-2">
-            @foreach ($presets as $slug => $preset)
-                @php($installed = $servers->firstWhere('slug', $slug))
-                <div class="rounded-2xl border border-white/10 bg-zinc-900/70 p-4">
-                    <div class="flex items-start gap-3">
-                        <div class="grid size-10 shrink-0 place-items-center rounded-xl bg-accent/10 text-sm font-bold text-accent">
-                            {{ str($preset['name'])->substr(0, 1) }}
-                        </div>
-                        <div class="min-w-0">
-                            <flux:heading size="sm">{{ $preset['name'] }}</flux:heading>
-                            <flux:text class="mt-1 text-sm text-zinc-400">{{ $preset['description'] }}</flux:text>
-                        </div>
-                    </div>
-
-                    <flux:button
-                        class="mt-4 w-full"
-                        variant="{{ $installed ? 'ghost' : 'primary' }}"
-                        wire:click="installPreset('{{ $slug }}')"
-                        :disabled="(bool) $installed"
-                    >
-                        {{ $installed ? 'Added' : 'Add connection' }}
-                    </flux:button>
-                </div>
-            @endforeach
-        </div>
-    </section>
-
-    <section class="mt-9" aria-labelledby="configured-connections">
-        <div class="flex items-end justify-between gap-4">
-            <div>
-                <flux:heading id="configured-connections" size="lg">Configured</flux:heading>
-                <flux:text class="mt-1 text-zinc-400">Secrets are encrypted before they reach SQLite.</flux:text>
+        <form wire:submit="addServer" class="grid gap-3">
+            <div class="grid gap-3 sm:grid-cols-2">
+                <flux:input wire:model="name" size="sm" label="Name" placeholder="Work" />
+                <flux:input wire:model="url" size="sm" type="url" label="MCP URL" placeholder="https://example.com/mcp" />
             </div>
-            <flux:badge rounded>{{ $servers->count() }}</flux:badge>
-        </div>
 
-        <div class="mt-4 space-y-4">
-            @forelse ($servers as $server)
-                <article wire:key="server-{{ $server->id }}" class="rounded-2xl border border-white/10 bg-zinc-900/70 p-5">
-                    <div class="flex items-start gap-3">
-                        <div class="min-w-0 flex-1">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <flux:heading size="sm">{{ $server->name }}</flux:heading>
-                                @if ($server->is_connected)
-                                    <flux:badge color="emerald" size="sm" rounded>Connected</flux:badge>
-                                @else
-                                    <flux:badge color="amber" size="sm" rounded>Needs credentials</flux:badge>
-                                @endif
-                                @unless ($server->enabled)
-                                    <flux:badge size="sm" rounded>Paused</flux:badge>
-                                @endunless
-                            </div>
-                            <flux:text class="mt-1 truncate text-xs text-zinc-500">{{ $server->url }}</flux:text>
+            <div class="grid gap-3 sm:grid-cols-2">
+                <flux:select wire:model.live="authType" size="sm" label="Authentication">
+                    <flux:select.option value="oauth">OAuth 2.1</flux:select.option>
+                    <flux:select.option value="bearer">Bearer token</flux:select.option>
+                    <flux:select.option value="none">None</flux:select.option>
+                </flux:select>
+
+                <flux:select wire:model="approvalMode" size="sm" label="Approvals">
+                    <flux:select.option value="writes">Writes and unknown tools</flux:select.option>
+                    <flux:select.option value="always">Every tool call</flux:select.option>
+                    <flux:select.option value="never">Never</flux:select.option>
+                </flux:select>
+            </div>
+
+            @if ($authType === 'bearer')
+                <flux:input wire:model="token" size="sm" type="password" label="Bearer token" viewable />
+            @endif
+
+            <div>
+                <flux:button type="submit" size="sm" variant="primary" icon="plus">Add server</flux:button>
+            </div>
+        </form>
+    </flux:fieldset>
+
+    <flux:separator class="my-6" />
+
+    <div class="mb-2 flex items-center justify-between">
+        <flux:heading size="lg">Servers</flux:heading>
+        <flux:badge size="sm">{{ $servers->count() }}</flux:badge>
+    </div>
+
+    @if ($servers->isEmpty())
+        <flux:callout icon="server-stack">
+            Add an MCP URL above to make its tools available to the assistant.
+        </flux:callout>
+    @else
+        <flux:accordion exclusive transition>
+            @foreach ($servers as $server)
+                <flux:accordion.item wire:key="server-{{ $server->id }}" :heading="$server->name">
+                    <div class="grid gap-4 pb-2">
+                        <div class="flex min-w-0 items-center gap-2">
+                            @if ($server->is_connected)
+                                <flux:badge color="green" size="sm">Connected</flux:badge>
+                            @else
+                                <flux:badge color="amber" size="sm">Credentials needed</flux:badge>
+                            @endif
+                            <flux:badge size="sm">{{ strtoupper($server->auth_type) }}</flux:badge>
+                            <flux:text class="min-w-0 flex-1 truncate text-xs">{{ $server->url }}</flux:text>
+                            <flux:switch
+                                :checked="$server->enabled"
+                                wire:click="toggle({{ $server->id }})"
+                                aria-label="Enable {{ $server->name }}"
+                            />
                         </div>
 
-                        <flux:switch
-                            :checked="$server->enabled"
-                            wire:click="toggle({{ $server->id }})"
-                            aria-label="Enable {{ $server->name }}"
-                        />
-                    </div>
+                        @error("server.{$server->id}")
+                            <flux:callout variant="danger" icon="exclamation-triangle">{{ $message }}</flux:callout>
+                        @enderror
 
-                    @error("server.{$server->id}")
-                        <flux:callout variant="danger" icon="exclamation-triangle" class="mt-4">{{ $message }}</flux:callout>
-                    @enderror
+                        @if ($server->last_error)
+                            <flux:callout variant="warning" icon="exclamation-circle">
+                                Tool discovery failed on the last connection attempt.
+                            </flux:callout>
+                        @endif
 
-                    @if ($server->last_error)
-                        <flux:callout variant="warning" icon="exclamation-circle" class="mt-4">
-                            This server failed during its last tool discovery. Reconnect or test it again.
-                        </flux:callout>
-                    @endif
-
-                    <div class="mt-4 grid gap-3">
                         @if ($server->auth_type === 'bearer')
-                            <flux:input
-                                wire:model="tokens.{{ $server->id }}"
-                                type="password"
-                                label="Bearer token"
-                                placeholder="{{ $server->is_connected ? 'Replace saved token' : 'Paste token' }}"
-                                viewable
-                            />
-                            <flux:button wire:click="saveCredentials({{ $server->id }})">Save token</flux:button>
+                            <div class="flex items-end gap-2">
+                                <flux:input
+                                    wire:model="tokens.{{ $server->id }}"
+                                    size="sm"
+                                    type="password"
+                                    label="Bearer token"
+                                    placeholder="{{ $server->is_connected ? 'Replace saved token' : 'Paste token' }}"
+                                    viewable
+                                    class="flex-1"
+                                />
+                                <flux:button size="sm" wire:click="saveCredentials({{ $server->id }})">Save</flux:button>
+                            </div>
                         @elseif ($server->auth_type === 'oauth')
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <flux:input
                                     wire:model="clientIds.{{ $server->id }}"
-                                    label="OAuth client ID"
-                                    placeholder="{{ filled($server->oauth_client_id) ? 'Saved' : 'Optional for Linear/Notion' }}"
+                                    size="sm"
+                                    label="Client ID"
+                                    placeholder="{{ filled($server->oauth_client_id) ? 'Saved' : 'Optional with dynamic registration' }}"
                                 />
                                 <flux:input
                                     wire:model="clientSecrets.{{ $server->id }}"
+                                    size="sm"
                                     type="password"
-                                    label="OAuth client secret"
-                                    placeholder="{{ filled($server->oauth_client_secret) ? 'Saved' : 'Required by Slack' }}"
+                                    label="Client secret"
+                                    placeholder="{{ filled($server->oauth_client_secret) ? 'Saved' : 'Optional' }}"
                                     viewable
                                 />
                             </div>
                             <flux:input
                                 wire:model="scopes.{{ $server->id }}"
-                                label="OAuth scopes"
+                                size="sm"
+                                label="Scopes"
                                 placeholder="{{ $server->oauth_scope ?: 'Provider defaults' }}"
                             />
-                            <div class="rounded-xl border border-white/10 bg-black/20 p-3">
-                                <flux:text class="text-xs font-semibold text-zinc-400">OAuth callback URL</flux:text>
-                                <code class="mt-1 block break-all text-xs text-zinc-500">{{ route('connections.oauth.callback', $server->slug) }}</code>
-                            </div>
-                            <div class="grid gap-2 sm:grid-cols-2">
-                                <flux:button wire:click="saveCredentials({{ $server->id }})">Save OAuth settings</flux:button>
+                            <flux:input
+                                size="sm"
+                                label="Callback URL"
+                                value="{{ route('connections.oauth.callback', $server->slug) }}"
+                                readonly
+                                copyable
+                            />
+                            <div class="flex gap-2">
+                                <flux:button size="sm" wire:click="saveCredentials({{ $server->id }})">Save settings</flux:button>
                                 <flux:button
+                                    size="sm"
                                     href="{{ route('connections.oauth.connect', $server->slug) }}"
                                     variant="primary"
                                     icon="arrow-top-right-on-square"
@@ -142,73 +142,44 @@
                                 </flux:button>
                             </div>
                         @endif
-                    </div>
 
-                    <div class="mt-5 border-t border-white/10 pt-4">
-                        <flux:text class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Approval policy</flux:text>
-                        <div class="grid grid-cols-3 gap-2">
-                            @foreach (['writes' => 'Writes', 'always' => 'Always', 'never' => 'Never'] as $mode => $label)
-                                <flux:button
-                                    size="sm"
-                                    variant="{{ $server->approval_mode === $mode ? 'primary' : 'ghost' }}"
-                                    wire:click="setApprovalMode({{ $server->id }}, '{{ $mode }}')"
-                                >
-                                    {{ $label }}
-                                </flux:button>
-                            @endforeach
+                        <div>
+                            <flux:text class="mb-2 text-xs">Approval policy</flux:text>
+                            <flux:button.group>
+                                @foreach (['writes' => 'Writes', 'always' => 'Always', 'never' => 'Never'] as $mode => $label)
+                                    <flux:button
+                                        size="sm"
+                                        variant="{{ $server->approval_mode === $mode ? 'primary' : 'outline' }}"
+                                        wire:click="setApprovalMode({{ $server->id }}, '{{ $mode }}')"
+                                    >
+                                        {{ $label }}
+                                    </flux:button>
+                                @endforeach
+                            </flux:button.group>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <flux:button
+                                size="sm"
+                                variant="danger"
+                                wire:click="remove({{ $server->id }})"
+                                wire:confirm="Remove {{ $server->name }} and its saved credentials?"
+                            >
+                                Remove
+                            </flux:button>
+                            <flux:button
+                                size="sm"
+                                variant="ghost"
+                                icon="signal"
+                                wire:click="test({{ $server->id }})"
+                                :disabled="! $server->is_connected"
+                            >
+                                Test
+                            </flux:button>
                         </div>
                     </div>
-
-                    <div class="mt-4 flex justify-between gap-3">
-                        <flux:button
-                            size="sm"
-                            variant="danger"
-                            wire:click="remove({{ $server->id }})"
-                            wire:confirm="Remove {{ $server->name }} and its saved credentials?"
-                        >
-                            Remove
-                        </flux:button>
-                        <flux:button
-                            size="sm"
-                            variant="ghost"
-                            icon="signal"
-                            wire:click="test({{ $server->id }})"
-                            :disabled="! $server->is_connected"
-                        >
-                            Test
-                        </flux:button>
-                    </div>
-                </article>
-            @empty
-                <div class="rounded-2xl border border-dashed border-white/15 p-7 text-center">
-                    <flux:text class="text-zinc-400">No MCP servers yet.</flux:text>
-                </div>
-            @endforelse
-        </div>
-    </section>
-
-    <section class="mt-7">
-        <flux:accordion transition>
-            <flux:accordion.item heading="Add a custom MCP server">
-                <form wire:submit="addCustom" class="grid gap-4 pt-2">
-                    <flux:input wire:model="name" label="Name" placeholder="My MCP server" />
-                    <flux:input wire:model="url" type="url" label="HTTPS endpoint" placeholder="https://example.com/mcp" />
-                    <flux:select wire:model.live="authType" label="Authentication">
-                        <flux:select.option value="none">No authentication</flux:select.option>
-                        <flux:select.option value="bearer">Bearer token</flux:select.option>
-                        <flux:select.option value="oauth">OAuth 2.1</flux:select.option>
-                    </flux:select>
-                    @if ($authType === 'bearer')
-                        <flux:input wire:model="token" type="password" label="Bearer token" viewable />
-                    @endif
-                    <flux:select wire:model="approvalMode" label="Approval policy">
-                        <flux:select.option value="writes">Approve writes and unknown tools</flux:select.option>
-                        <flux:select.option value="always">Approve every tool call</flux:select.option>
-                        <flux:select.option value="never">Never ask</flux:select.option>
-                    </flux:select>
-                    <flux:button type="submit" variant="primary">Add server</flux:button>
-                </form>
-            </flux:accordion.item>
+                </flux:accordion.item>
+            @endforeach
         </flux:accordion>
-    </section>
+    @endif
 </main>

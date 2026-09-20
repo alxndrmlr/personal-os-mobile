@@ -13,7 +13,6 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('slug');
-            $table->string('preset')->nullable();
             $table->text('url');
             $table->string('auth_type')->default('oauth');
             $table->text('bearer_token')->nullable();

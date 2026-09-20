@@ -1,5 +1,5 @@
 <div
-    class="voice-shell mx-auto grid min-h-dvh w-full max-w-5xl grid-rows-[auto_minmax(12rem,1fr)_auto] px-[max(1.25rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1rem,env(safe-area-inset-top))] lg:max-w-6xl lg:grid-cols-[minmax(18rem,.78fr)_minmax(22rem,1.22fr)] lg:grid-rows-[auto_1fr] lg:gap-x-8"
+    class="mx-auto grid min-h-dvh w-full max-w-5xl grid-rows-[auto_minmax(12rem,1fr)_auto] px-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pt-[max(1rem,env(safe-area-inset-top))] lg:grid-cols-[minmax(16rem,.7fr)_minmax(22rem,1.3fr)] lg:grid-rows-[auto_1fr] lg:gap-x-6"
     data-state="{{ $state }}"
     x-data="voiceSurface"
     x-on:start-browser-recording="startBrowserRecording()"
@@ -7,14 +7,8 @@
     x-on:assistant-spoken="speak($event.detail.url, $event.detail.text)"
 >
     <header class="flex items-center gap-3 pb-4 lg:col-span-2">
-        <div class="grid size-11 place-items-center rounded-2xl border border-accent/25 bg-zinc-900 shadow-[inset_0_0_1.25rem_rgba(95,229,162,.08)]">
-            <span class="block h-5 w-3 rounded-full bg-accent shadow-[0_0_1.2rem_rgba(131,229,179,.55)]"></span>
-        </div>
-
-        <div>
-            <flux:text class="text-[.68rem] font-bold uppercase tracking-[.14em] text-zinc-400">Personal OS</flux:text>
-            <flux:heading size="lg" level="1">Voice</flux:heading>
-        </div>
+        <flux:avatar icon="microphone" />
+        <flux:heading size="lg" level="1">Personal OS</flux:heading>
 
         <flux:button
             href="{{ route('connections.index') }}"
@@ -24,7 +18,7 @@
             class="ml-auto"
             aria-label="Manage MCP connections"
         />
-        <flux:badge color="emerald" variant="solid" icon="lock-closed" rounded>Private</flux:badge>
+        <flux:badge icon="lock-closed">Private</flux:badge>
     </header>
 
     <section class="min-h-0 overflow-y-auto py-5 [scrollbar-width:none] lg:col-start-2 lg:row-start-2 [&::-webkit-scrollbar]:hidden" aria-live="polite" aria-label="Conversation">
@@ -33,46 +27,42 @@
                 'mb-5 max-w-[88%]',
                 'ml-auto' => $message['role'] === 'user',
             ])>
-                <flux:text class="mb-1.5 ml-1 text-[.68rem] font-bold uppercase tracking-[.08em] text-zinc-500">
+                <flux:text class="mb-1 ml-1 text-xs">
                     {{ $message['role'] === 'user' ? 'You' : 'Assistant' }}
                 </flux:text>
                 <p @class([
-                    'm-0 whitespace-pre-wrap rounded-[1.15rem] px-4 py-3.5 leading-6',
-                    'rounded-br-sm bg-accent text-accent-foreground' => $message['role'] === 'user',
-                    'rounded-bl-sm border border-white/10 bg-zinc-900 text-zinc-100' => $message['role'] === 'assistant',
+                    'm-0 whitespace-pre-wrap rounded-xl px-4 py-3 leading-6',
+                    'rounded-br-sm bg-zinc-200 dark:bg-zinc-700' => $message['role'] === 'user',
+                    'rounded-bl-sm border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900' => $message['role'] === 'assistant',
                 ])>{{ $message['content'] }}</p>
             </article>
         @empty
             <div class="flex min-h-72 flex-col items-center justify-center text-center">
-                <div class="voice-orb flex size-32 items-center justify-center gap-1.5 rounded-full border border-accent/20 bg-[radial-gradient(circle,rgba(84,216,149,.18),rgba(14,37,29,.4)_55%,transparent_70%)] shadow-[0_0_4rem_rgba(70,199,134,.08)]" aria-hidden="true">
-                    <i></i><i></i><i></i><i></i><i></i>
-                </div>
-                <flux:heading size="xl" class="mt-6">Ready when you are.</flux:heading>
-                <flux:text class="mt-1.5 max-w-xs text-zinc-400">Tap once to speak. Tap again when you’re done.</flux:text>
+                <flux:avatar icon="microphone" size="xl" />
+                <flux:heading size="xl" class="mt-4">Ready when you are.</flux:heading>
+                <flux:text class="mt-1 max-w-xs">Tap once to speak. Tap again when you’re done.</flux:text>
             </div>
         @endforelse
 
         <p
             wire:stream="assistant-response"
-            class="mb-5 max-w-[88%] whitespace-pre-wrap rounded-[1.15rem] rounded-bl-sm border border-accent/20 bg-zinc-900 px-4 py-3.5 leading-6 text-zinc-100 empty:hidden"
+            class="mb-5 max-w-[88%] whitespace-pre-wrap rounded-xl rounded-bl-sm border border-zinc-200 bg-white px-4 py-3 leading-6 empty:hidden dark:border-zinc-700 dark:bg-zinc-900"
         ></p>
 
         @if ($pendingApprovals !== [])
             <div class="mt-6 space-y-3" aria-label="Tool approvals">
                 <div class="flex items-center gap-2">
-                    <flux:icon.shield-check class="size-5 text-amber-300" />
+                    <flux:icon.shield-check class="size-5" />
                     <flux:heading size="sm">Review requested actions</flux:heading>
                 </div>
 
                 @foreach ($pendingApprovals as $approval)
-                    <article wire:key="approval-{{ $approval['id'] }}" class="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4">
-                        <flux:text class="text-xs font-bold uppercase tracking-wide text-amber-200">
-                            {{ str($approval['tool'])->replace('_', ' ')->headline() }}
-                        </flux:text>
-                        <flux:text class="mt-1 text-sm text-zinc-300">
+                    <flux:callout wire:key="approval-{{ $approval['id'] }}" variant="warning" icon="shield-exclamation">
+                        <flux:callout.heading>{{ str($approval['tool'])->replace('_', ' ')->headline() }}</flux:callout.heading>
+                        <flux:callout.text>
                             {{ $approval['reason'] ?: 'This connected tool wants to perform an action.' }}
-                        </flux:text>
-                        <pre class="mt-3 max-h-36 overflow-auto whitespace-pre-wrap break-words rounded-xl bg-black/25 p-3 text-xs leading-5 text-zinc-400">{{ json_encode($approval['arguments'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                        </flux:callout.text>
+                        <pre class="mt-3 max-h-36 overflow-auto whitespace-pre-wrap break-words text-xs leading-5">{{ json_encode($approval['arguments'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
                         <div class="mt-3 grid grid-cols-2 gap-2">
                             <flux:button
                                 size="sm"
@@ -89,11 +79,11 @@
                                 Allow
                             </flux:button>
                         </div>
-                    </article>
+                    </flux:callout>
                 @endforeach
 
                 @error('approvals')
-                    <flux:text class="text-sm text-red-400">{{ $message }}</flux:text>
+                    <flux:text class="text-sm text-red-600 dark:text-red-400">{{ $message }}</flux:text>
                 @enderror
 
                 <flux:button wire:click="submitApprovals" variant="primary" class="w-full">
@@ -103,15 +93,14 @@
         @endif
     </section>
 
-    <section class="flex flex-col items-center border-t border-white/10 pt-4 lg:col-start-1 lg:row-start-2 lg:justify-center lg:border-t-0 lg:border-r lg:pr-8" aria-label="Voice controls">
+    <section class="flex flex-col items-center border-t border-zinc-200 pt-4 dark:border-zinc-700 lg:col-start-1 lg:row-start-2 lg:justify-center lg:border-t-0 lg:border-r lg:pr-6" aria-label="Voice controls">
         <flux:text @class([
-            'mb-3.5 min-h-5 text-center text-sm tracking-wide',
-            'text-zinc-400' => $state !== 'error',
-            'text-red-400' => $state === 'error',
+            'mb-3 min-h-5 text-center text-sm',
+            'text-red-600 dark:text-red-400' => $state === 'error',
         ])>{{ $status }}</flux:text>
 
         <flux:button
-            class="talk-button !size-20 !min-h-20 !min-w-20 !rounded-full !p-0 [&>svg]:!size-8"
+            class="!size-20 !min-h-20 !min-w-20 !rounded-full !p-0 [&>svg]:!size-8"
             variant="{{ $state === 'recording' ? 'danger' : 'primary' }}"
             icon="{{ $state === 'recording' ? 'stop' : 'microphone' }}"
             square

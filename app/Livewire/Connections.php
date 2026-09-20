@@ -17,7 +17,7 @@ class Connections extends Component
 
     public string $url = '';
 
-    public string $authType = 'bearer';
+    public string $authType = 'oauth';
 
     public string $token = '';
 
@@ -35,30 +35,7 @@ class Connections extends Component
     /** @var array<int, string> */
     public array $scopes = [];
 
-    public function installPreset(string $preset, PersonalUser $personalUser): void
-    {
-        $definition = config("mcp-connections.presets.{$preset}");
-
-        abort_unless(is_array($definition), 404);
-
-        McpServer::query()->firstOrCreate(
-            [
-                'user_id' => $personalUser->get()->getKey(),
-                'slug' => $preset,
-            ],
-            [
-                'name' => $definition['name'],
-                'preset' => $preset,
-                'url' => $definition['url'],
-                'auth_type' => $definition['auth_type'],
-                'oauth_scope' => $definition['scope'] ?: null,
-                'approval_mode' => 'writes',
-                'enabled' => true,
-            ],
-        );
-    }
-
-    public function addCustom(PersonalUser $personalUser): void
+    public function addServer(PersonalUser $personalUser): void
     {
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:80'],
@@ -94,7 +71,7 @@ class Connections extends Component
         ]);
 
         $this->reset(['name', 'url', 'token']);
-        $this->authType = 'bearer';
+        $this->authType = 'oauth';
         $this->approvalMode = 'writes';
     }
 
@@ -178,7 +155,6 @@ class Connections extends Component
                 ->whereBelongsTo($personalUser->get())
                 ->orderBy('name')
                 ->get(),
-            'presets' => config('mcp-connections.presets'),
         ])->layout('layouts.app');
     }
 

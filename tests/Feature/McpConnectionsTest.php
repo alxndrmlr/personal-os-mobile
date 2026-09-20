@@ -23,24 +23,27 @@ class McpConnectionsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_a_preset_can_be_installed_from_the_connections_screen(): void
+    public function test_a_server_can_be_added_from_the_connections_screen(): void
     {
         $this->get('/connections')
             ->assertOk()
             ->assertSeeLivewire(Connections::class)
-            ->assertSee('Linear')
-            ->assertSee('Backbone')
-            ->assertSee('Slack')
-            ->assertSee('Notion');
+            ->assertSee('Add server')
+            ->assertSee('Add an MCP URL above');
 
         Livewire::test(Connections::class)
-            ->call('installPreset', 'linear')
-            ->assertSee('Needs credentials');
+            ->set('name', 'Work')
+            ->set('url', 'https://mcp.example.com/mcp')
+            ->set('authType', 'bearer')
+            ->set('token', 'secret-token')
+            ->call('addServer')
+            ->assertSee('Work')
+            ->assertSee('Connected');
 
         $this->assertDatabaseHas('mcp_servers', [
-            'slug' => 'linear',
-            'url' => 'https://mcp.linear.app/mcp',
-            'auth_type' => 'oauth',
+            'slug' => 'work',
+            'url' => 'https://mcp.example.com/mcp',
+            'auth_type' => 'bearer',
             'approval_mode' => 'writes',
         ]);
     }
@@ -67,20 +70,20 @@ class McpConnectionsTest extends TestCase
     {
         $write = new ApprovableMcpTool(
             $this->tool('create_issue'),
-            'linear',
-            'Linear',
+            'work',
+            'Work',
             'writes',
         );
         $read = new ApprovableMcpTool(
             $this->tool('get_issue', ['readOnlyHint' => true]),
-            'linear',
-            'Linear',
+            'work',
+            'Work',
             'writes',
         );
 
         $this->assertNotNull($write->shouldRequestApproval(new Request(['title' => 'Ship it'])));
         $this->assertNull($read->shouldRequestApproval(new Request(['id' => 'ENG-1'])));
-        $this->assertStringStartsWith('mcp_linear_', $write->name());
+        $this->assertStringStartsWith('mcp_work_', $write->name());
     }
 
     public function test_a_pending_tool_call_is_rendered_for_human_approval(): void
@@ -89,9 +92,9 @@ class McpConnectionsTest extends TestCase
             AgentResponse::fakeWithPendingApprovals([
                 new PendingApproval(
                     id: 'call_123',
-                    tool: 'mcp_linear_create_issue',
+                    tool: 'mcp_work_create_issue',
                     arguments: ['title' => 'Ship the mobile app'],
-                    reason: 'This may change data in Linear.',
+                    reason: 'This may change data in Work.',
                 ),
             ]),
         ]);
@@ -127,9 +130,9 @@ class McpConnectionsTest extends TestCase
             ->set('conversationId', 'conversation-123')
             ->set('pendingApprovals', [[
                 'id' => 'call_123',
-                'tool' => 'mcp_linear_create_issue',
+                'tool' => 'mcp_work_create_issue',
                 'arguments' => ['title' => 'Ship it'],
-                'reason' => 'This may change data in Linear.',
+                'reason' => 'This may change data in Work.',
             ]])
             ->call('chooseApproval', 'call_123', 'approve')
             ->call('submitApprovals')

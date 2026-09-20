@@ -79,7 +79,7 @@ class McpConnectionManager
 
     public function client(McpServer $server, ?string $redirectUri = null): WebClient
     {
-        $client = Client::web($server->url)->withTimeout(20);
+        $client = Client::web($server->url)->withTimeout(config('mcp-connections.timeout', 20));
 
         if ($server->auth_type === 'oauth') {
             $client->withOAuth(

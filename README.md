@@ -7,14 +7,14 @@ agent turn, and speech synthesis.
 
 ## What is included
 
-- Livewire + Flux Pro UI, themed to the Personal OS dark mint palette
+- Livewire + Flux Pro UI using the default Flux design system
 - Push-to-talk recording through NativePHP's microphone plugin
 - Browser `MediaRecorder` fallback for local development
 - Laravel AI transcription and text-to-speech
 - Persistent `agent_conversations` and `agent_conversation_messages`
 - A concise personal assistant with a current-time tool
 - Streamed agent replies through Livewire
-- Encrypted MCP connections for Linear, Backbone, Slack, Notion, and custom servers
+- An encrypted MCP server registry managed entirely through the app
 - Human approval before mutating or unannotated MCP tool calls
 - A responsive, safe-area-aware phone UI with a landscape/dual-pane layout
 - [iPhone Duo layout research](docs/iphone-duo-research.md) for cover, inner,
@@ -50,19 +50,16 @@ record audio after microphone permission is granted.
 
 ## MCP connections and approvals
 
-Open **Connections** from the voice screen. Add one of the built-in presets or
-register a custom Streamable HTTP MCP endpoint. Bearer tokens, OAuth tokens,
-refresh tokens, and OAuth client credentials use Laravel's encrypted model
-casts before they are written to SQLite.
+Open **Connections** from the voice screen and enter a name, Streamable HTTP
+MCP URL, authentication method, and approval policy. There is no built-in
+provider catalog. Bearer tokens, OAuth tokens, refresh tokens, and OAuth client
+credentials use Laravel's encrypted model casts before they are written to
+SQLite.
 
-- Linear uses `https://mcp.linear.app/mcp` and supports dynamic OAuth client
-  registration.
-- Notion uses `https://mcp.notion.com/mcp` and requires interactive OAuth.
-- Slack uses `https://mcp.slack.com/mcp`. Create a Slack app, add this app's
-  displayed OAuth callback URL to its redirect URLs, then save the Slack client
-  ID and secret before authorizing.
-- Backbone uses `https://backbone.govai.com/mcp`. Its public authentication
-  contract is not discoverable, so the preset starts in bearer-token mode.
+OAuth servers that support dynamic client registration need only their URL.
+Other servers may require a client ID, secret, or scopes after the connection
+is added. The connection detail view shows the exact callback URL to register
+with that provider.
 
 OAuth callbacks are generated from `APP_URL`. It must be the URL that the
 provider can redirect back to. Local web development can use a trusted HTTPS
