@@ -8,7 +8,7 @@
                 </native:text>
             </native:column>
 
-            <native:outlined-text-input
+            <outlined-text-input
                 ref="server-name"
                 label="Name"
                 placeholder="Linear"
@@ -16,7 +16,7 @@
                 :is-error="isset($errors['name'])"
                 supporting="{{ $errors['name'][0] ?? '' }}"
             />
-            <native:outlined-text-input
+            <outlined-text-input
                 ref="server-url"
                 label="Server URL"
                 placeholder="https://example.com/mcp"
@@ -34,7 +34,7 @@
             />
 
             @if ($authType === 'Bearer token')
-                <native:outlined-text-input
+                <outlined-text-input
                     ref="server-token"
                     label="Bearer token"
                     keyboard="password"
@@ -59,7 +59,7 @@
             <native:text class="text-lg font-semibold text-theme-on-background">Your servers</native:text>
 
             @forelse ($servers as $server)
-                <native:pressable
+                <pressable
                     ref="server-{{ $server['id'] }}"
                     class="w-full p-4 bg-theme-surface rounded-2xl"
                     press-scale="0.98"
@@ -85,7 +85,7 @@
                         </native:column>
                         <native:icon name="chevron.right" :size="18" />
                     </native:row>
-                </native:pressable>
+                </pressable>
             @empty
                 <native:column class="w-full p-5 gap-2 bg-theme-surface rounded-2xl items-center">
                     <native:icon name="link" :size="32" />

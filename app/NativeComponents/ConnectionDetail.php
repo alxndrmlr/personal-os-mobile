@@ -6,7 +6,6 @@ use App\AsyncTasks\TestMcpConnection;
 use App\Models\McpServer;
 use App\Services\McpConnectionManager;
 use App\Services\PersonalUser;
-use Illuminate\View\View;
 use Native\Mobile\Attributes\Locked;
 use Native\Mobile\Browser;
 use Native\Mobile\Edge\Layouts\Builders\TabBarOptions;
@@ -169,11 +168,6 @@ class ConnectionDetail extends NativeComponent
     {
         $this->ownedServer()->delete();
         $this->back();
-    }
-
-    public function render(): View
-    {
-        return view('native.connection-detail');
     }
 
     private function loadServer(): void

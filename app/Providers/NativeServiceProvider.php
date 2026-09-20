@@ -4,9 +4,9 @@ namespace App\Providers;
 
 use Ikromjon\LocalNotifications\LocalNotificationsServiceProvider;
 use Illuminate\Support\ServiceProvider;
+use Native\Mobile\Providers\MicrophoneServiceProvider;
 use Native\Mobile\UI\NativeUIServiceProvider;
 use Native\Mobile\UI\Theme;
-use Native\Mobile\Providers\MicrophoneServiceProvider;
 use NativePHP\MediaPlayer\MediaPlayerServiceProvider;
 
 class NativeServiceProvider extends ServiceProvider

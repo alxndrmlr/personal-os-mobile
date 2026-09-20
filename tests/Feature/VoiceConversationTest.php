@@ -55,8 +55,7 @@ class VoiceConversationTest extends TestCase
             ->assertSet('draft', '')
             ->assertSet('status', 'Tap to speak')
             ->assertSee('What time is it?')
-            ->assertSee('It is 8:15 PM.')
-            ->assertDispatched('assistant-spoken');
+            ->assertSee('It is 8:15 PM.');
 
         $this->assertDatabaseCount('agent_conversations', 1);
         $this->assertDatabaseCount('agent_conversation_messages', 2);

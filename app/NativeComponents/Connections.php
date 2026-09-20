@@ -6,7 +6,6 @@ use App\Models\McpServer;
 use App\Services\PersonalUser;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
 use Native\Mobile\Edge\Layouts\Builders\TabBarOptions;
 use Native\Mobile\Edge\NativeComponent;
 
@@ -115,11 +114,6 @@ class Connections extends NativeComponent
     public function openServer(int $id): void
     {
         $this->navigate("/connections/{$id}");
-    }
-
-    public function render(): View
-    {
-        return view('native.connections');
     }
 
     private function refreshServers(): void

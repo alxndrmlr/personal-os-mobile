@@ -66,12 +66,12 @@
                                 <native:button
                                     label="{{ ($approvalChoices[$approval['id']] ?? null) === 'approve' ? 'Allowed' : 'Allow' }}"
                                     variant="{{ ($approvalChoices[$approval['id']] ?? null) === 'approve' ? 'success' : 'secondary' }}"
-                                    @press="chooseApproval('{{ $approval['id'] }}', 'approve')"
+                                    @press="chooseApproval({{ $loop->index }}, true)"
                                 />
                                 <native:button
                                     label="{{ ($approvalChoices[$approval['id']] ?? null) === 'reject' ? 'Denied' : 'Deny' }}"
                                     variant="{{ ($approvalChoices[$approval['id']] ?? null) === 'reject' ? 'destructive' : 'ghost' }}"
-                                    @press="chooseApproval('{{ $approval['id'] }}', 'reject')"
+                                    @press="chooseApproval({{ $loop->index }}, false)"
                                 />
                             </native:row>
                         </native:column>
@@ -148,7 +148,7 @@
     </native:scroll-view>
 
     <native:column class="w-full p-4 gap-3 bg-theme-surface border-theme-outline">
-        <native:outlined-text-input
+        <outlined-text-input
             ref="message-input"
             native:model.blur="draft"
             placeholder="Message your agent"

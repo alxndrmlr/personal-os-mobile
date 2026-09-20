@@ -7,7 +7,6 @@ use App\AsyncTasks\RunConversationTurn;
 use App\Models\AgentActivity;
 use App\Services\PersonalUser;
 use Ikromjon\LocalNotifications\Facades\LocalNotifications;
-use Illuminate\View\View;
 use Laravel\Ai\Models\Conversation;
 use Native\Mobile\Attributes\On;
 use Native\Mobile\Attributes\Poll;
@@ -131,14 +130,15 @@ class Voice extends NativeComponent
         $this->status = 'Recording cancelled';
     }
 
-    public function chooseApproval(string $id, string $choice): void
+    public function chooseApproval(int $index, bool $approved): void
     {
-        if (! in_array($choice, ['approve', 'reject'], true)
-            || ! collect($this->pendingApprovals)->contains('id', $id)) {
+        $approval = $this->pendingApprovals[$index] ?? null;
+
+        if (! $approval) {
             return;
         }
 
-        $this->approvalChoices[$id] = $choice;
+        $this->approvalChoices[$approval['id']] = $approved ? 'approve' : 'reject';
         $this->approvalError = '';
     }
 
@@ -194,11 +194,6 @@ class Voice extends NativeComponent
         $this->activeActivityCount = AgentActivity::query()
             ->whereIn('status', [AgentActivity::STATUS_WORKING, AgentActivity::STATUS_NEEDS_INPUT])
             ->count();
-    }
-
-    public function render(): View
-    {
-        return view('native.voice');
     }
 
     private function runTurn(

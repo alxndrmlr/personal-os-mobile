@@ -6,6 +6,7 @@ use App\Ai\Agents\PersonalAssistant;
 use App\Ai\Tools\ApprovableMcpTool;
 use App\Models\AgentActivity;
 use App\Models\McpServer;
+use App\NativeComponents\ConnectionDetail;
 use App\NativeComponents\Connections;
 use App\NativeComponents\Voice;
 use App\Services\ConversationTurn;
@@ -69,6 +70,25 @@ class McpConnectionsTest extends TestCase
 
         $this->assertNotSame('plain-secret-token', $raw);
         $this->assertSame('plain-secret-token', $server->fresh()->bearer_token);
+    }
+
+    public function test_a_server_opens_in_the_native_connection_detail_screen(): void
+    {
+        $server = McpServer::query()->create([
+            'user_id' => app(PersonalUser::class)->get()->getKey(),
+            'name' => 'Work',
+            'slug' => 'work',
+            'url' => 'https://mcp.example.com/mcp',
+            'auth_type' => 'none',
+            'approval_mode' => 'writes',
+            'enabled' => true,
+        ]);
+
+        Native::visit("/connections/{$server->id}")
+            ->assertScreen(ConnectionDetail::class)
+            ->assertSee('Work')
+            ->assertSee('Test connection')
+            ->assertAccessible();
     }
 
     public function test_write_and_unannotated_tools_require_approval_by_default(): void
@@ -148,7 +168,7 @@ class McpConnectionsTest extends TestCase
                 'arguments' => ['title' => 'Ship it'],
                 'reason' => 'This may change data in Work.',
             ]])
-            ->call('chooseApproval', 'call_123', 'approve')
+            ->call('chooseApproval', 0, true)
             ->call('submitApprovals')
             ->assertSet('state', 'idle')
             ->assertSet('pendingApprovals', [])
