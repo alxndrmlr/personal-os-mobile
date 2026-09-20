@@ -53,7 +53,7 @@
         ])>{{ $status }}</flux:text>
 
         <flux:button
-            class="talk-button size-20 rounded-full"
+            class="talk-button !size-20 !min-h-20 !min-w-20 !rounded-full !p-0 [&>svg]:!size-8"
             variant="{{ $state === 'recording' ? 'danger' : 'primary' }}"
             icon="{{ $state === 'recording' ? 'stop' : 'microphone' }}"
             square
@@ -68,7 +68,7 @@
 
         <div class="mt-4 w-full max-w-sm">
             <flux:accordion exclusive transition>
-                <flux:accordion.item heading="Type instead">
+                <flux:accordion.item heading="Type instead" class="text-center">
                     <form class="flex flex-col gap-3" wire:submit="sendText">
                         <flux:textarea
                             wire:model="draft"
