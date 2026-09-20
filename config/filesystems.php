@@ -47,6 +47,17 @@ return [
             'report' => false,
         ],
 
+        // NativePHP replaces this URL with its internal asset route on-device.
+        // Keeping a web fallback lets local Livewire development serve generated audio.
+        'mobile_public' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
