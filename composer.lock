@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2361ed54469aa52842f9bb04d47300ca",
+    "content-hash": "211ef91436bdeea095fb701045974eb3",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -2830,6 +2830,61 @@
                 "source": "https://github.com/NativePHP/mobile-air/tree/4.5.1"
             },
             "time": "2026-09-19T15:03:37+00:00"
+        },
+        {
+            "name": "nativephp/mobile-microphone",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/NativePHP/mobile-microphone.git",
+                "reference": "0c58856d746c2e8e4469a9016d25712a281d5be9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/NativePHP/mobile-microphone/zipball/0c58856d746c2e8e4469a9016d25712a281d5be9",
+                "reference": "0c58856d746c2e8e4469a9016d25712a281d5be9",
+                "shasum": ""
+            },
+            "require": {
+                "nativephp/mobile": "^3.0 || ^4.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.0",
+                "pestphp/pest": "^2.7|^3.0|^4.0"
+            },
+            "type": "nativephp-plugin",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Native\\Mobile\\Providers\\MicrophoneServiceProvider"
+                    ]
+                },
+                "nativephp": {
+                    "manifest": "nativephp.json"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Native\\Mobile\\Providers\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "NativePHP",
+                    "email": "support@nativephp.com"
+                }
+            ],
+            "description": "Microphone recording plugin for NativePHP Mobile - audio recording with pause/resume support",
+            "support": {
+                "issues": "https://github.com/NativePHP/mobile-microphone/issues",
+                "source": "https://github.com/NativePHP/mobile-microphone/tree/1.0.2"
+            },
+            "time": "2026-07-15T18:46:26+00:00"
         },
         {
             "name": "nesbot/carbon",

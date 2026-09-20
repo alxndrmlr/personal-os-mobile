@@ -47,7 +47,7 @@ vendor/bin/pint --test
 
 ## Run on iPhone
 
-iOS builds require an Apple silicon Mac with Xcode 16+, CocoaPods, and a
+iOS builds require an Apple silicon Mac with macOS 15.6+, Xcode 26+, CocoaPods, and a
 physical device in Developer Mode (or an iOS Simulator). On that Mac:
 
 ```bash
@@ -64,6 +64,11 @@ The microphone purpose string is configured in `config/nativephp.php`.
 
 The Linux development environment can build and test Laravel and the web UI,
 but Apple does not permit generating or compiling the iOS shell outside macOS.
+
+NativePHP bundles the application's environment into the IPA. Using
+`OPENAI_API_KEY` directly is reasonable for a private, personally installed
+build, but the key can be extracted from the app. Route AI calls through a
+server-side proxy before distributing the app to anyone else.
 
 ## Configuration
 

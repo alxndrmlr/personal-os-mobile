@@ -11,7 +11,8 @@
         "laravel/framework": "^13.17",
         "laravel/mcp": "^1.0",
         "laravel/tinker": "^3.0",
-        "nativephp/mobile": "^4.5"
+        "nativephp/mobile": "^4.5",
+        "nativephp/mobile-microphone": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
