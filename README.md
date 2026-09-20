@@ -15,6 +15,8 @@ agent turn, and speech synthesis.
 - A concise personal assistant with a current-time tool
 - Optional remote MCP tools via `PERSONAL_MCP_URL`
 - A responsive, safe-area-aware phone UI with a landscape/dual-pane layout
+- [iPhone Duo layout research](docs/iphone-duo-research.md) for cover, inner,
+  book, table, and Split View states
 
 This first slice is turn-based voice, not a full-duplex realtime audio stream.
 That keeps conversation persistence and tool execution provider-independent
