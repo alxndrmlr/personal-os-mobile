@@ -11,5 +11,6 @@
 <body class="min-h-dvh bg-white text-zinc-800 antialiased dark:bg-zinc-800 dark:text-white">
     {{ $slot }}
     @fluxScripts
+    <x-local-notifications::init />
 </body>
 </html>

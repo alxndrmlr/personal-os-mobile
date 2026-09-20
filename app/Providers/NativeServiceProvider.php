@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Ikromjon\LocalNotifications\LocalNotificationsServiceProvider;
 use Illuminate\Support\ServiceProvider;
 use Native\Mobile\Providers\MicrophoneServiceProvider;
 
@@ -36,7 +37,7 @@ class NativeServiceProvider extends ServiceProvider
     {
         return [
             MicrophoneServiceProvider::class,
-
+            LocalNotificationsServiceProvider::class,
         ];
     }
 }

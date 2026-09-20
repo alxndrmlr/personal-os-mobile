@@ -141,6 +141,54 @@
                 </flux:accordion.item>
             </flux:accordion>
         </div>
+
+        <flux:card class="mt-4 w-full max-w-sm" wire:poll.5s aria-label="Agent activity">
+            <div class="flex items-center gap-2">
+                <flux:icon.bolt class="size-4" />
+                <flux:heading size="sm">Agent activity</flux:heading>
+                @if ($activeActivityCount > 0)
+                    <flux:badge size="sm" color="blue" class="ml-auto">{{ $activeActivityCount }} active</flux:badge>
+                @endif
+            </div>
+
+            <div class="mt-3 grid gap-3">
+                @forelse ($activities as $activity)
+                    <div wire:key="activity-{{ $activity->id }}" class="flex min-w-0 items-start gap-3">
+                        <flux:badge
+                            size="sm"
+                            color="{{ match ($activity->status) {
+                                'working' => 'blue',
+                                'needs_input' => 'amber',
+                                'completed' => 'green',
+                                default => 'red',
+                            } }}"
+                        >
+                            {{ match ($activity->status) {
+                                'needs_input' => 'Needs input',
+                                default => str($activity->status)->headline(),
+                            } }}
+                        </flux:badge>
+                        <div class="min-w-0 flex-1">
+                            <flux:text class="truncate text-sm font-medium">{{ $activity->title }}</flux:text>
+                            <flux:text class="line-clamp-2 text-xs">{{ $activity->detail }}</flux:text>
+                        </div>
+                    </div>
+                @empty
+                    <flux:text class="text-sm">Agent runs will appear here.</flux:text>
+                @endforelse
+            </div>
+
+            <flux:button
+                size="sm"
+                variant="ghost"
+                icon="bell"
+                class="mt-3 w-full"
+                wire:click="enableNotifications"
+                :disabled="$notificationPermissionRequested"
+            >
+                {{ $notificationPermissionRequested ? 'Permission requested' : 'Enable system notifications' }}
+            </flux:button>
+        </flux:card>
     </section>
 
     <audio x-ref="player" preload="auto" class="hidden"></audio>

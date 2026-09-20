@@ -2,8 +2,10 @@
 
 namespace App\Livewire;
 
+use App\Models\AgentActivity;
 use App\Services\ConversationTurn;
 use App\Services\PersonalUser;
+use Ikromjon\LocalNotifications\Facades\LocalNotifications;
 use Illuminate\Validation\ValidationException;
 use Laravel\Ai\Approvals\Decision;
 use Laravel\Ai\Approvals\Decisions;
@@ -41,6 +43,8 @@ class Voice extends Component
     public array $approvalChoices = [];
 
     public bool $usingNativeRecorder = false;
+
+    public bool $notificationPermissionRequested = false;
 
     #[Validate('nullable|file|mimetypes:audio/m4a,audio/mp4,audio/mpeg,audio/wav,audio/x-wav,audio/webm|max:25600')]
     public mixed $recording = null;
@@ -167,7 +171,18 @@ class Voice extends Component
 
     public function render()
     {
-        return view('livewire.voice')->layout('layouts.app');
+        return view('livewire.voice', [
+            'activities' => AgentActivity::query()->latest('started_at')->limit(5)->get(),
+            'activeActivityCount' => AgentActivity::query()
+                ->whereIn('status', [AgentActivity::STATUS_WORKING, AgentActivity::STATUS_NEEDS_INPUT])
+                ->count(),
+        ])->layout('layouts.app');
+    }
+
+    public function enableNotifications(): void
+    {
+        LocalNotifications::requestPermission();
+        $this->notificationPermissionRequested = true;
     }
 
     public function chooseApproval(string $id, string $choice): void

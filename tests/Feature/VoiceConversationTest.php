@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Ai\Agents\PersonalAssistant;
 use App\Livewire\Voice;
+use App\Models\AgentActivity;
+use Ikromjon\LocalNotifications\Facades\LocalNotifications;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -31,6 +33,10 @@ class VoiceConversationTest extends TestCase
         Storage::fake('mobile_public');
         PersonalAssistant::fake(['It is 8:15 PM.']);
         Audio::fake([base64_encode('fake audio')]);
+        LocalNotifications::shouldReceive('schedule')
+            ->once()
+            ->withArgs(fn (array $notification): bool => $notification['title'] === 'Your agent is done')
+            ->andReturn([]);
 
         Livewire::test(Voice::class)
             ->set('draft', 'What time is it?')
@@ -43,7 +49,21 @@ class VoiceConversationTest extends TestCase
 
         $this->assertDatabaseCount('agent_conversations', 1);
         $this->assertDatabaseCount('agent_conversation_messages', 2);
+        $this->assertDatabaseHas('agent_activities', [
+            'title' => 'What time is it?',
+            'status' => AgentActivity::STATUS_COMPLETED,
+        ]);
         $this->assertNotNull(Conversation::query()->first()?->participant);
+    }
+
+    public function test_system_notification_permission_can_be_requested(): void
+    {
+        LocalNotifications::shouldReceive('requestPermission')->once()->andReturn([]);
+
+        Livewire::test(Voice::class)
+            ->call('enableNotifications')
+            ->assertSet('notificationPermissionRequested', true)
+            ->assertSee('Permission requested');
     }
 
     public function test_an_uploaded_recording_is_transcribed_before_prompting(): void

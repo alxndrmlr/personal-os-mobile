@@ -16,9 +16,11 @@ agent turn, and speech synthesis.
 - Streamed agent replies through Livewire
 - An encrypted MCP server registry managed entirely through the app
 - Human approval before mutating or unannotated MCP tool calls
+- Persistent agent activity with on-device completion and approval notifications
 - A responsive, safe-area-aware phone UI with a landscape/dual-pane layout
 - [iPhone Duo layout research](docs/iphone-duo-research.md) for cover, inner,
   book, table, and Split View states
+- [Agent notifications and Live Activity architecture](docs/agent-activity-and-notifications.md)
 
 This first slice is turn-based voice, not a full-duplex realtime audio stream.
 That keeps conversation persistence and tool execution provider-independent
@@ -96,6 +98,9 @@ php artisan native:run ios
 Choose your simulator or connected iPhone when prompted. NativePHP generates
 the ephemeral `nativephp/ios` project during installation; do not hand-edit it.
 The microphone purpose string is configured in `config/nativephp.php`.
+Tap **Enable system notifications** in the agent activity card once after
+installing. Local notifications and microphone access require a rebuilt native
+app after plugin changes (`php artisan native:install ios --force`).
 
 The Linux development environment can build and test Laravel and the web UI,
 but Apple does not permit generating or compiling the iOS shell outside macOS.

@@ -6,6 +6,7 @@ use App\Ai\Agents\PersonalAssistant;
 use App\Ai\Tools\ApprovableMcpTool;
 use App\Livewire\Connections;
 use App\Livewire\Voice;
+use App\Models\AgentActivity;
 use App\Models\McpServer;
 use App\Services\ConversationTurn;
 use App\Services\PersonalUser;
@@ -106,6 +107,11 @@ class McpConnectionsTest extends TestCase
             ->assertSet('pendingApprovals.0.id', 'call_123')
             ->assertSee('Review requested actions')
             ->assertSee('Ship the mobile app');
+
+        $this->assertDatabaseHas('agent_activities', [
+            'title' => 'Create the issue',
+            'status' => AgentActivity::STATUS_NEEDS_INPUT,
+        ]);
     }
 
     public function test_a_human_decision_is_sent_back_to_the_paused_conversation(): void

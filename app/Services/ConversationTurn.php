@@ -18,7 +18,10 @@ use Throwable;
 
 class ConversationTurn
 {
-    public function __construct(private readonly PersonalUser $personalUser) {}
+    public function __construct(
+        private readonly PersonalUser $personalUser,
+        private readonly AgentActivityTracker $activities,
+    ) {}
 
     /**
      * @param  callable(string): void|null  $onDelta
@@ -46,7 +49,16 @@ class ConversationTurn
         }
 
         $assistant = $this->assistant($conversationId);
-        $result = $this->prompt($assistant, $transcript, $onDelta);
+        $activity = $this->activities->start($transcript, $conversationId);
+
+        try {
+            $result = $this->prompt($assistant, $transcript, $onDelta);
+            $this->activities->finish($activity, $result);
+        } catch (Throwable $exception) {
+            $this->activities->fail($activity);
+
+            throw $exception;
+        }
 
         return [
             'conversation_id' => $result['conversation_id'],
@@ -69,7 +81,17 @@ class ConversationTurn
         bool $speak = true,
         ?callable $onDelta = null,
     ): array {
-        $result = $this->prompt($this->assistant($conversationId), $decisions, $onDelta);
+        $assistant = $this->assistant($conversationId);
+        $activity = $this->activities->resume($conversationId);
+
+        try {
+            $result = $this->prompt($assistant, $decisions, $onDelta);
+            $this->activities->finish($activity, $result);
+        } catch (Throwable $exception) {
+            $this->activities->fail($activity);
+
+            throw $exception;
+        }
 
         return [
             'conversation_id' => $result['conversation_id'],
