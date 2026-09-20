@@ -48,9 +48,11 @@ class VoiceConversationTest extends TestCase
     {
         PersonalAssistant::fake(['You asked about tomorrow.']);
         Transcription::fake(['What is on my calendar tomorrow?']);
+        $audio = UploadedFile::fake()->create('voice.m4a', 64, 'audio/m4a');
+        file_put_contents($audio->getRealPath(), 'fake audio bytes');
 
         $response = $this->post('/voice/turn', [
-            'audio' => UploadedFile::fake()->create('voice.m4a', 64, 'audio/m4a'),
+            'audio' => $audio,
             'speak' => false,
         ], ['Accept' => 'application/json']);
 
