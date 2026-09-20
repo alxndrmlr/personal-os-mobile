@@ -1,1 +1,82 @@
-# personal-os-mobile
+# Personal OS Mobile
+
+A private, single-user voice assistant built with Laravel 13, the Laravel AI
+SDK, and NativePHP Mobile. Laravel and SQLite run on the phone; recorded audio
+is sent directly to the configured AI provider for transcription, an agent
+turn, and speech synthesis.
+
+## What is included
+
+- Push-to-talk recording through NativePHP's microphone bridge
+- Browser `MediaRecorder` fallback for local development
+- Laravel AI transcription and text-to-speech
+- Persistent `agent_conversations` and `agent_conversation_messages`
+- A concise personal assistant with a current-time tool
+- Optional remote MCP tools via `PERSONAL_MCP_URL`
+- A responsive, safe-area-aware phone UI with a landscape/dual-pane layout
+
+This first slice is turn-based voice, not a full-duplex realtime audio stream.
+That keeps conversation persistence and tool execution provider-independent
+while leaving room for a dedicated realtime transport later.
+
+## Local setup
+
+Requirements: PHP 8.4, Composer, Node.js 22+, and an OpenAI API key.
+
+```bash
+cp .env.example .env
+composer install
+php artisan key:generate
+touch database/database.sqlite
+php artisan migrate
+npm install
+npm run build
+php artisan serve
+```
+
+Set `OPENAI_API_KEY` in `.env`. Open `http://localhost:8000`; the browser can
+record audio after microphone permission is granted.
+
+Run the checks with:
+
+```bash
+composer test
+npm run build
+vendor/bin/pint --test
+```
+
+## Run on iPhone
+
+iOS builds require an Apple silicon Mac with Xcode 16+, CocoaPods, and a
+physical device in Developer Mode (or an iOS Simulator). On that Mac:
+
+```bash
+composer install
+npm install
+npm run build
+php artisan native:install ios
+php artisan native:run ios
+```
+
+Choose your simulator or connected iPhone when prompted. NativePHP generates
+the ephemeral `nativephp/ios` project during installation; do not hand-edit it.
+The microphone purpose string is configured in `config/nativephp.php`.
+
+The Linux development environment can build and test Laravel and the web UI,
+but Apple does not permit generating or compiling the iOS shell outside macOS.
+
+## Configuration
+
+| Variable | Purpose |
+| --- | --- |
+| `OPENAI_API_KEY` | Default agent, transcription, and speech provider |
+| `PERSONAL_USER_NAME` | Name for the on-device conversation participant |
+| `PERSONAL_USER_EMAIL` | Stable identity for persisted conversations |
+| `PERSONAL_ASSISTANT_VOICE` | Laravel AI speech voice |
+| `PERSONAL_MCP_URL` | Optional remote MCP server |
+| `PERSONAL_MCP_TOKEN` | Optional bearer token for the MCP server |
+| `NATIVEPHP_APP_ID` | Reverse-domain iOS bundle identifier |
+
+No login flow is included by design. Anyone with access to the unlocked app has
+access to its conversations, so device passcode/Face ID remains the security
+boundary until app-level biometric locking is added.
