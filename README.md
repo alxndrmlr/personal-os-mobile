@@ -26,29 +26,93 @@ This first slice is turn-based voice, not a full-duplex realtime audio stream.
 That keeps conversation persistence and tool execution provider-independent
 while leaving room for a dedicated realtime transport later.
 
-## Local setup
+## First local setup
 
-Requirements: PHP 8.4, Composer, Node.js 22+, and an OpenAI API key.
+Requirements:
+
+- PHP 8.3+ with SQLite
+- Composer
+- Node.js 22+ and npm
+- your Flux account email and Flux Pro license key
+- an OpenAI API key
+
+Clone the repository and run the setup script:
 
 ```bash
-cp .env.example .env
-composer config http-basic.composer.fluxui.dev "$FLUX_USERNAME" "$FLUX_LICENSE_KEY"
-composer install
-php artisan key:generate
-touch database/database.sqlite
-php artisan migrate
-php artisan storage:link
-npm install
-npm run build
-php artisan serve
+git clone https://github.com/alxndrmlr/personal-os-mobile.git
+cd personal-os-mobile
+./bin/setup-local
 ```
 
-Flux Pro is authenticated via a local `auth.json` file (already gitignored).
-Use your Flux account email as `FLUX_USERNAME` and license key as
-`FLUX_LICENSE_KEY`. Never commit those values.
+The script securely prompts for the Flux and OpenAI credentials, creates
+`.env`, installs PHP and JavaScript dependencies, generates `APP_KEY`, prepares
+SQLite, runs migrations, builds assets, links storage, and validates the
+NativePHP plugins.
 
-Set `OPENAI_API_KEY` in `.env`. Open `http://localhost:8000`; the browser can
-record audio after microphone permission is granted.
+For a non-interactive setup, pass credentials as environment variables:
+
+```bash
+FLUX_USERNAME="you@example.com" \
+FLUX_LICENSE_KEY="..." \
+OPENAI_API_KEY="..." \
+./bin/setup-local
+```
+
+Flux credentials are written to the gitignored Composer `auth.json`; the OpenAI
+key is written to the gitignored `.env`. Do not put either value in a committed
+file or a shell script.
+
+## Start development
+
+### Browser
+
+```bash
+./bin/dev web
+```
+
+This runs Laravel, the on-device-style database queue, logs, and Vite together.
+Open `http://localhost:8000`. Browser recording uses `MediaRecorder`, so this is
+the quickest way to inspect the Livewire and Flux UI.
+
+### NativePHP Jump
+
+```bash
+./bin/dev jump
+```
+
+Install the free NativePHP Jump app on the phone and scan the displayed QR code.
+Jump is useful for a quick device preview without Xcode. It includes first-party
+plugins such as the microphone, but not this project's third-party local
+notifications plugin. Use a compiled iOS build to test system notifications.
+
+### Compiled iOS app
+
+This requires an Apple silicon Mac, Xcode, CocoaPods, and either an iPhone in
+Developer Mode or an iOS Simulator. Set a unique bundle ID in `.env` first:
+
+```dotenv
+NATIVEPHP_APP_ID=com.yourname.personalos
+```
+
+Then run:
+
+```bash
+./bin/dev ios
+```
+
+On its first run this generates the ephemeral iOS project, then opens the
+device/simulator selection and starts NativePHP with hot reload and Vite. The
+microphone and local-notification plugins are already registered in
+`app/Providers/NativeServiceProvider.php`; no additional registration command
+is needed.
+
+If a native plugin or its Swift/Kotlin code changes, regenerate the native
+project before running again:
+
+```bash
+./bin/dev ios:install
+./bin/dev ios
+```
 
 ## MCP connections and approvals
 
@@ -82,25 +146,13 @@ npm run build
 vendor/bin/pint --test
 ```
 
-## Run on iPhone
-
-iOS builds require an Apple silicon Mac with macOS 15.6+, Xcode 26+, CocoaPods, and a
-physical device in Developer Mode (or an iOS Simulator). On that Mac:
-
-```bash
-composer install
-npm install
-npm run build
-php artisan native:install ios
-php artisan native:run ios
-```
+## iPhone notes
 
 Choose your simulator or connected iPhone when prompted. NativePHP generates
 the ephemeral `nativephp/ios` project during installation; do not hand-edit it.
-The microphone purpose string is configured in `config/nativephp.php`.
-Tap **Enable system notifications** in the agent activity card once after
-installing. Local notifications and microphone access require a rebuilt native
-app after plugin changes (`php artisan native:install ios --force`).
+The microphone purpose string is configured in `config/nativephp.php`. Tap
+**Enable system notifications** in the agent activity card once after
+installing.
 
 The Linux development environment can build and test Laravel and the web UI,
 but Apple does not permit generating or compiling the iOS shell outside macOS.

@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+mode="${1:-web}"
+if [[ $# -gt 0 ]]; then
+    shift
+fi
+
+case "$mode" in
+    web)
+        exec composer run dev -- "$@"
+        ;;
+
+    jump)
+        exec php artisan native:jump --browser "$@"
+        ;;
+
+    ios)
+        if [[ "$(uname -s)" != "Darwin" || "$(uname -m)" != "arm64" ]]; then
+            printf 'iOS builds require an Apple silicon Mac.\n' >&2
+            exit 1
+        fi
+
+        command -v xcodebuild >/dev/null 2>&1 || {
+            printf 'Xcode and its command-line tools are required.\n' >&2
+            exit 1
+        }
+
+        command -v pod >/dev/null 2>&1 || {
+            printf 'CocoaPods is required. Install it with: brew install cocoapods\n' >&2
+            exit 1
+        }
+
+        if [[ ! -d nativephp/ios ]]; then
+            php artisan native:install ios
+        fi
+
+        exec php artisan native:run ios --watch --vite "$@"
+        ;;
+
+    ios:install)
+        if [[ "$(uname -s)" != "Darwin" || "$(uname -m)" != "arm64" ]]; then
+            printf 'iOS builds require an Apple silicon Mac.\n' >&2
+            exit 1
+        fi
+
+        exec php artisan native:install ios --force "$@"
+        ;;
+
+    *)
+        cat >&2 <<'TEXT'
+Usage: ./bin/dev [web|jump|ios|ios:install]
+
+  web          Laravel, queue, logs, and Vite in the browser
+  jump         Preview through the NativePHP Jump phone app
+  ios          Build and run iOS with hot reload and Vite
+  ios:install  Regenerate the iOS project after native plugin changes
+TEXT
+        exit 1
+        ;;
+esac
