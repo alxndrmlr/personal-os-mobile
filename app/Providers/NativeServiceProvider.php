@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use Ikromjon\LocalNotifications\LocalNotificationsServiceProvider;
 use Illuminate\Support\ServiceProvider;
 use Native\Mobile\Providers\MicrophoneServiceProvider;
+use Native\Mobile\UI\NativeUIServiceProvider;
+use Native\Mobile\UI\Theme;
+use NativePHP\MediaPlayer\MediaPlayerServiceProvider;
 
 class NativeServiceProvider extends ServiceProvider
 {
@@ -20,7 +24,7 @@ class NativeServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        $this->app->booted(fn () => Theme::pushToNative());
     }
 
     /**
@@ -36,7 +40,9 @@ class NativeServiceProvider extends ServiceProvider
     {
         return [
             MicrophoneServiceProvider::class,
-
+            LocalNotificationsServiceProvider::class,
+            NativeUIServiceProvider::class,
+            MediaPlayerServiceProvider::class,
         ];
     }
 }

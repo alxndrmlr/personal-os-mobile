@@ -7,14 +7,15 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "ikromjon/nativephp-mobile-local-notifications": "dev-main",
         "laravel/ai": "^0.11.2",
         "laravel/framework": "^13.17",
         "laravel/mcp": "^1.0",
         "laravel/tinker": "^3.0",
-        "livewire/flux": "^2.20",
-        "livewire/flux-pro": "^2.20",
         "nativephp/mobile": "^4.5",
-        "nativephp/mobile-microphone": "^1.0"
+        "nativephp/mobile-media-player": "^1.0",
+        "nativephp/mobile-microphone": "^1.0",
+        "nativephp/mobile-ui": "^0.6.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -43,13 +44,11 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
-            "@php artisan storage:link --force",
-            "npm install --ignore-scripts",
-            "npm run build"
+            "@php artisan storage:link --force"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "@php artisan dev"
+            "@php artisan native:jump"
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
@@ -89,10 +88,5 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true,
-    "repositories": [{
-        "name": "flux-pro",
-        "type": "composer",
-        "url": "https://composer.fluxui.dev"
-    }]
+    "prefer-stable": true
 }

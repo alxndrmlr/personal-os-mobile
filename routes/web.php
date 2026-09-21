@@ -1,12 +1,14 @@
 <?php
 
-use App\Livewire\Connections;
-use App\Livewire\Voice;
 use App\Services\McpConnectionManager;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', Voice::class)->name('voice.index');
-Route::get('/connections', Connections::class)->name('connections.index');
+Route::get('/', fn () => response()->json([
+    'name' => config('app.name'),
+    'interface' => 'NativePHP SuperNative',
+]))->name('voice.index');
+
+Route::redirect('/connections', '/')->name('connections.index');
 
 Route::get('/connections/{server}/oauth/connect', function (
     string $server,
@@ -36,5 +38,7 @@ Route::get('/connections/{server}/oauth/callback', function (
 
     $connections->storeOAuthToken($connection->slug, $token);
 
-    return redirect()->route('connections.index');
+    $scheme = config('nativephp.deeplink_scheme', 'personalos');
+
+    return redirect()->away("{$scheme}://connections");
 })->name('connections.oauth.callback');

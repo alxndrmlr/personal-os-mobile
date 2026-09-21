@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+info() {
+    printf '\n\033[1;34m==>\033[0m %s\n' "$1"
+}
+
+fail() {
+    printf '\n\033[1;31mError:\033[0m %s\n' "$1" >&2
+    exit 1
+}
+
+require_command() {
+    command -v "$1" >/dev/null 2>&1 || fail "$1 is required but was not found."
+}
+
+env_value() {
+    local key="$1"
+    php -r '
+        $key = $argv[1];
+        $path = ".env";
+        if (! is_file($path)) {
+            exit;
+        }
+        foreach (file($path, FILE_IGNORE_NEW_LINES) as $line) {
+            if (str_starts_with($line, $key."=")) {
+                echo trim(substr($line, strlen($key) + 1), " \t\n\r\0\x0B\"'\''");
+                break;
+            }
+        }
+    ' "$key"
+}
+
+write_env() {
+    local key="$1"
+    local value="$2"
+
+    LOCAL_SETUP_KEY="$key" LOCAL_SETUP_VALUE="$value" php -r '
+        $path = ".env";
+        $key = getenv("LOCAL_SETUP_KEY");
+        $value = str_replace(["\\", "\""], ["\\\\", "\\\""], getenv("LOCAL_SETUP_VALUE"));
+        $line = $key."=\"".$value."\"";
+        $contents = file_get_contents($path);
+        $pattern = "/^".preg_quote($key, "/")."=.*$/m";
+
+        if (preg_match($pattern, $contents)) {
+            $contents = preg_replace($pattern, $line, $contents, 1);
+        } else {
+            $contents = rtrim($contents).PHP_EOL.$line.PHP_EOL;
+        }
+
+        file_put_contents($path, $contents);
+    '
+}
+
+require_command php
+require_command composer
+
+php -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);' \
+    || fail "PHP 8.3 or newer is required. Found $(php -r 'echo PHP_VERSION;')."
+
+if [[ ! -f .env ]]; then
+    info "Creating .env"
+    cp .env.example .env
+fi
+
+if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+    write_env OPENAI_API_KEY "$OPENAI_API_KEY"
+elif [[ -z "$(env_value OPENAI_API_KEY)" ]]; then
+    [[ -t 0 ]] || fail "Set OPENAI_API_KEY before running this script."
+
+    printf 'OpenAI API key: '
+    read -rs OPENAI_API_KEY
+    printf '\n'
+
+    [[ -n "$OPENAI_API_KEY" ]] || fail "An OpenAI API key is required."
+    write_env OPENAI_API_KEY "$OPENAI_API_KEY"
+fi
+
+info "Installing PHP dependencies"
+composer install --no-interaction --prefer-dist
+
+if [[ -z "$(env_value APP_KEY)" ]]; then
+    info "Generating the Laravel application key"
+    php artisan key:generate --force
+fi
+
+info "Preparing SQLite and storage"
+mkdir -p database
+touch database/database.sqlite
+php artisan migrate --force
+php artisan storage:link --force
+
+info "Validating NativePHP components and plugins"
+php artisan native:validate
+php artisan native:plugin:validate
+
+cat <<'TEXT'
+
+Local setup is ready.
+
+  NativePHP Jump: ./bin/dev jump
+  iOS app:        ./bin/dev ios
+
+The iOS command requires Apple silicon, Xcode, CocoaPods, and an iPhone in
+Developer Mode (or a simulator). It installs the generated iOS project on the
+first run.
+TEXT

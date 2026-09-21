@@ -1,6 +1,6 @@
 # iPhone Duo: developer states, SDK, and Personal OS design notes
 
-Researched 20 September 2026 for this private Livewire / Flux / NativePHP
+Researched 20 September 2026 for this private Laravel / NativePHP SuperNative
 voice app. Apple announced iPhone Duo on 9 September 2026. Device
 availability is 23 October 2026 on iOS 27.1. The written SDK and Xcode 27.1
 beta were still rolling out through late September; treat API spellings as
@@ -186,8 +186,8 @@ Notes:
 - `UIRequiresFullScreen` still resizes when the phone opens or closes.
 - NativePHP currently ships its own embedded PHP runtime and UI shell.
   Apple’s 27.1 layout APIs apply to the **native** chrome NativePHP
-  generates (WKWebView / SuperNative), not automatically to our Blade.
-  We still have to express compact vs regular in CSS.
+  generates. EDGE views use SwiftUI on iOS, but we still have to express
+  compact and regular arrangements through responsive EDGE classes.
 
 ## Developer APIs (iOS 27.1)
 
@@ -239,10 +239,9 @@ A voice player or calculator-like screen may disable vertical bars.
 
 ## What this means for Personal OS
 
-We are not a UIKit app. NativePHP hosts Laravel / Livewire / Flux. Apple
-will not automatically turn Flux toolbars into Duo vertical bars. We should
-still **behave** as if we were following HIG, using CSS as the arrangement
-layer.
+We are not hand-writing a UIKit app. NativePHP runs Laravel on-device and EDGE
+renders SwiftUI. NativePHP supplies native navigation and tab chrome, while the
+screen templates remain responsible for responsive content arrangements.
 
 ### App states to encode in the product
 
@@ -250,7 +249,7 @@ layer.
 | --- | --- | --- |
 | `cover` | compact width, short viewport | Single column; talk button dominant; accordion collapsed |
 | `inner-portrait` | regular width, tall | Optional two-row: conversation then composer |
-| `inner-landscape` | regular width, wide | Two pane: composer \| conversation (current desktop CSS) |
+| `inner-landscape` | regular width, wide | Two pane: composer \| conversation |
 | `book` | two side-by-side regions, fold gutter | Conversation \| talk; gutter empty |
 | `table` | two stacked regions, fold gutter | Transcript above, controls below |
 | `split-narrow` | compact again | Same as `cover` |
@@ -259,18 +258,17 @@ layer.
 Pose and conversation phase are independent. Folding mid-turn must not
 reset the agent conversation.
 
-### CSS / Livewire tactics (do this without the 27.1 SDK)
+### EDGE tactics (do this without the 27.1 SDK)
 
-1. Keep using `env(safe-area-inset-*)` on all four edges. Duo Split View
-   and vertical bars make **left and right** as important as top/bottom.
-2. Drive layout with **container queries** on the voice shell (`@container`
-   min-width / min-aspect-ratio), not `window.innerWidth` and not a
-   hardcoded “iPhone Duo” breakpoint.
+1. Let NativePHP native chrome own system safe areas; use EDGE `safe-area`
+   only on full-bleed screens without that chrome.
+2. Use EDGE’s mobile-first responsive prefixes (`medium:`, `md:`,
+   `expanded:`), not user-agent detection or a hardcoded Duo breakpoint.
 3. Treat a center band as reserved when the viewport is inner-sized and
-   the aspect ratio is roughly square-ish (partial fold). CSS cannot see
-   hinge angle; a conservative gutter (`flex` / `grid` with a middle track
+   the aspect ratio is roughly square-ish (partial fold). EDGE cannot see
+   hinge angle; a conservative gutter (`row` with a middle spacer
    that stays empty) is safer than guessing degrees.
-4. Keep the talk control as a large circular Flux primary button. In `table`
+4. Keep the talk control as a prominent native primary button. In `table`
    it belongs in the near region; in `book` it belongs on one leaf, not
    across the fold.
 5. Conversation transcript is scrolling content — it may cross the fold.
@@ -279,26 +277,24 @@ reset the agent conversation.
    device should reveal **more of the same conversation**, not a different
    app.
 7. When NativePHP grows hinge or display APIs, map them onto the same state
-   names above. Until then, size-class CSS is the contract.
+   names above. Until then, EDGE breakpoints are the contract.
 
 ### NativePHP caveats
 
 - iOS builds still require a Mac, Xcode, and `native:install` /
   `native:run`. Duo simulator support depends on Apple’s 27.1 toolchain
   **and** NativePHP picking it up.
-- SuperNative / webview will apply Apple safe areas; it will not implement
+- SuperNative applies Apple safe areas but does not infer
   `ArrangementView` for Blade. We own the two-pane and gutter behavior.
 - Microphone, speech, and camera permissions remain Info.plist concerns
   (`NSMicrophoneUsageDescription` is already set). Inner-camera occlusion
   only matters if we add video later.
-- Test closed, open, Split View widths, and a squarish inner aspect in the
-  browser before hardware exists. The Flux dual-pane we already have is the
-  inner-landscape sketch; the compact column is the cover sketch.
+- Test closed, open, Split View widths, and a squarish inner aspect in Jump and
+  the iOS simulator before hardware exists.
 
 ## Practical audit for this repo
 
-When we next touch `resources/views/livewire/voice.blade.php` and
-`resources/css/app.css`:
+Audit `resources/views/native/voice.blade.php` in Jump and the simulator:
 
 - [ ] Compact column remains usable at ~320–400px wide (cover + Split View)
 - [ ] Regular + landscape uses two panes without stretching a phone column
@@ -308,7 +304,7 @@ When we next touch `resources/views/livewire/voice.blade.php` and
 - [ ] Transcript can scroll through the middle; composer cannot
 - [ ] Safe-area padding on trailing **and** leading edges
 - [ ] Opening/closing does not require a new conversation
-- [ ] Type-instead accordion does not cover the talk button in table pose
+- [ ] The native text composer does not cover the talk button in table pose
 - [ ] Re-check NativePHP + Xcode 27.1 simulator when that beta is installed
 
 ## Sources

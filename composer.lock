@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "25bcd0ba3b6f55f994847c95919ab4ae",
+    "content-hash": "8fbede43b745ef8bdc271c34b4e00be7",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1435,6 +1435,70 @@
             "time": "2026-08-24T17:13:02+00:00"
         },
         {
+            "name": "ikromjon/nativephp-mobile-local-notifications",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Ikromjon1998/nativephp-mobile-local-notifications.git",
+                "reference": "090ef43632b79f88aa75f36ffd2060ae3d8290fa"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Ikromjon1998/nativephp-mobile-local-notifications/zipball/090ef43632b79f88aa75f36ffd2060ae3d8290fa",
+                "reference": "090ef43632b79f88aa75f36ffd2060ae3d8290fa",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^11.0||^12.0||^13.0",
+                "nativephp/mobile": "^3.0 || ^4.0",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.28",
+                "orchestra/testbench": "^9.0||^10.0||^11.0",
+                "pestphp/pest": "^3.0",
+                "phpstan/phpstan": "^2.0",
+                "rector/rector": "^2.3"
+            },
+            "default-branch": true,
+            "type": "nativephp-plugin",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Ikromjon\\LocalNotifications\\LocalNotificationsServiceProvider"
+                    ]
+                },
+                "nativephp": {
+                    "manifest": "nativephp.json"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Ikromjon\\LocalNotifications\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Local notifications plugin for NativePHP Mobile - schedule, cancel, and manage local notifications with channels, badges, sounds, and repeat intervals",
+            "keywords": [
+                "laravel",
+                "local-notifications",
+                "mobile",
+                "nativephp",
+                "notifications",
+                "reminders",
+                "schedule"
+            ],
+            "support": {
+                "issues": "https://github.com/Ikromjon1998/nativephp-mobile-local-notifications/issues",
+                "source": "https://github.com/Ikromjon1998/nativephp-mobile-local-notifications/tree/main"
+            },
+            "time": "2026-09-07T00:52:53+00:00"
+        },
+        {
             "name": "laravel/ai",
             "version": "v0.11.2",
             "source": {
@@ -2564,221 +2628,6 @@
             "time": "2026-03-08T20:05:35+00:00"
         },
         {
-            "name": "livewire/flux",
-            "version": "v2.20.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/livewire/flux.git",
-                "reference": "9c3645ce3eb11ddf42ec956dcea322447469826a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/livewire/flux/zipball/9c3645ce3eb11ddf42ec956dcea322447469826a",
-                "reference": "9c3645ce3eb11ddf42ec956dcea322447469826a",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/console": "^10.0|^11.0|^12.0|^13.0",
-                "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
-                "illuminate/view": "^10.0|^11.0|^12.0|^13.0",
-                "laravel/prompts": "^0.1|^0.2|^0.3",
-                "livewire/livewire": "^3.7.4|^4.0|dev-main",
-                "php": "^8.1",
-                "symfony/console": "^6.0|^7.0|^8.0"
-            },
-            "conflict": {
-                "livewire/blaze": "<1.0.0-beta.2"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "aliases": {
-                        "Flux": "Flux\\Flux"
-                    },
-                    "providers": [
-                        "Flux\\FluxServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Flux\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "proprietary"
-            ],
-            "authors": [
-                {
-                    "name": "Caleb Porzio",
-                    "email": "calebporzio@gmail.com"
-                }
-            ],
-            "description": "The official UI component library for Livewire.",
-            "keywords": [
-                "components",
-                "flux",
-                "laravel",
-                "livewire",
-                "ui"
-            ],
-            "support": {
-                "issues": "https://github.com/livewire/flux/issues",
-                "source": "https://github.com/livewire/flux/tree/v2.20.0"
-            },
-            "time": "2026-09-15T13:15:09+00:00"
-        },
-        {
-            "name": "livewire/flux-pro",
-            "version": "2.20.0",
-            "dist": {
-                "type": "zip",
-                "url": "https://composer.fluxui.dev/download/a2c0935d-133b-41ff-8170-37166f10ece2/flux-pro-2.20.0.zip",
-                "reference": "e1b418ea620ef807cfdf8c571daaa3b411b9ceec",
-                "shasum": "d50b6c013b9a966ae6a7b4d23be06c0dc9004593"
-            },
-            "require": {
-                "illuminate/console": "^10.0|^11.0|^12.0|^13.0",
-                "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
-                "illuminate/view": "^10.0|^11.0|^12.0|^13.0",
-                "laravel/prompts": "^0.1.24|^0.2|^0.3",
-                "livewire/flux": "2.20.0|dev-main",
-                "livewire/livewire": "^3.7.4|^4.0|dev-main",
-                "php": "^8.1",
-                "symfony/console": "^6.0|^7.0|^8.0"
-            },
-            "require-dev": {
-                "livewire/volt": "*",
-                "orchestra/testbench": "^10.8|^11.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "aliases": {
-                        "Flux": "FluxPro\\FluxPro"
-                    },
-                    "providers": [
-                        "FluxPro\\FluxProServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "files": [
-                    "src/helpers.php"
-                ],
-                "psr-4": {
-                    "FluxPro\\": "src/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "App\\": "workbench/app/"
-                }
-            },
-            "scripts": {
-                "serve": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "@php vendor/bin/testbench workbench:build --ansi",
-                    "@php vendor/bin/testbench serve --port 3000 --ansi"
-                ]
-            },
-            "license": [
-                "proprietary"
-            ],
-            "authors": [
-                {
-                    "name": "Caleb Porzio",
-                    "email": "calebporzio@gmail.com"
-                }
-            ],
-            "description": "The pro version of Flux, the official UI component library for Livewire.",
-            "keywords": [
-                "components",
-                "flux",
-                "laravel",
-                "livewire",
-                "ui"
-            ],
-            "time": "2026-09-15T13:44:58+00:00"
-        },
-        {
-            "name": "livewire/livewire",
-            "version": "v4.4.5",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/livewire/livewire.git",
-                "reference": "10aa0b5ee44c99b5bce0f78ad265bbcf0e74abdc"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/livewire/livewire/zipball/10aa0b5ee44c99b5bce0f78ad265bbcf0e74abdc",
-                "reference": "10aa0b5ee44c99b5bce0f78ad265bbcf0e74abdc",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/database": "^10.0|^11.0|^12.0|^13.0",
-                "illuminate/routing": "^10.0|^11.0|^12.0|^13.0",
-                "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
-                "illuminate/validation": "^10.0|^11.0|^12.0|^13.0",
-                "laravel/prompts": "^0.1.24|^0.2|^0.3",
-                "league/mime-type-detection": "^1.9",
-                "php": "^8.1",
-                "symfony/console": "^6.0|^7.0|^8.0",
-                "symfony/http-kernel": "^6.2|^7.0|^8.0"
-            },
-            "require-dev": {
-                "calebporzio/sushi": "^2.1",
-                "laravel/framework": "^10.15.0|^11.0|^12.0|^13.0",
-                "mockery/mockery": "^1.3.1",
-                "orchestra/testbench": "^8.21.0|^9.0|^10.0|^11.0",
-                "orchestra/testbench-dusk": "^8.24|^9.1|^10.0|^11.0",
-                "phpunit/phpunit": "^10.4|^11.5|^12.5",
-                "psy/psysh": "^0.11.22|^0.12"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "aliases": {
-                        "Livewire": "Livewire\\Livewire"
-                    },
-                    "providers": [
-                        "Livewire\\LivewireServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "files": [
-                    "src/helpers.php"
-                ],
-                "psr-4": {
-                    "Livewire\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Caleb Porzio",
-                    "email": "calebporzio@gmail.com"
-                }
-            ],
-            "description": "A front-end framework for Laravel.",
-            "support": {
-                "issues": "https://github.com/livewire/livewire/issues",
-                "source": "https://github.com/livewire/livewire/tree/v4.4.5"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/livewire",
-                    "type": "github"
-                }
-            ],
-            "time": "2026-09-14T19:27:16+00:00"
-        },
-        {
             "name": "monolog/monolog",
             "version": "3.12.0",
             "source": {
@@ -3047,6 +2896,61 @@
             "time": "2026-09-19T15:03:37+00:00"
         },
         {
+            "name": "nativephp/mobile-media-player",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/NativePHP/mobile-media-player.git",
+                "reference": "55c17979ee49534215cd53a668e7fefe96ccd075"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/NativePHP/mobile-media-player/zipball/55c17979ee49534215cd53a668e7fefe96ccd075",
+                "reference": "55c17979ee49534215cd53a668e7fefe96ccd075",
+                "shasum": ""
+            },
+            "require": {
+                "nativephp/mobile": "^3.0 || ^4.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.0",
+                "pestphp/pest": "^2.7|^3.0|^4.0"
+            },
+            "type": "nativephp-plugin",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "NativePHP\\MediaPlayer\\MediaPlayerServiceProvider"
+                    ]
+                },
+                "nativephp": {
+                    "manifest": "nativephp.json"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "NativePHP\\MediaPlayer\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Bifrost Technology, LLC",
+                    "email": "support@nativephp.com"
+                }
+            ],
+            "description": "Media player plugin for NativePHP Mobile - shared audio/video playback, full-screen presentation, and a video-player element",
+            "support": {
+                "issues": "https://github.com/NativePHP/mobile-media-player/issues",
+                "source": "https://github.com/NativePHP/mobile-media-player/tree/1.0.1"
+            },
+            "time": "2026-07-15T18:46:26+00:00"
+        },
+        {
             "name": "nativephp/mobile-microphone",
             "version": "1.0.2",
             "source": {
@@ -3100,6 +3004,68 @@
                 "source": "https://github.com/NativePHP/mobile-microphone/tree/1.0.2"
             },
             "time": "2026-07-15T18:46:26+00:00"
+        },
+        {
+            "name": "nativephp/mobile-ui",
+            "version": "0.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/NativePHP/mobile-ui.git",
+                "reference": "c2d78e0c544400d326118c0afbc0d8664b3367d9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/NativePHP/mobile-ui/zipball/c2d78e0c544400d326118c0afbc0d8664b3367d9",
+                "reference": "c2d78e0c544400d326118c0afbc0d8664b3367d9",
+                "shasum": ""
+            },
+            "require": {
+                "nativephp/mobile": "^4.5",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.24",
+                "orchestra/testbench": "^10.0",
+                "pestphp/pest": "^3.0"
+            },
+            "type": "nativephp-plugin",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Native\\Mobile\\UI\\NativeUIServiceProvider"
+                    ]
+                },
+                "nativephp": {
+                    "manifest": "nativephp.json"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Native\\Mobile\\UI\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "NativePHP",
+                    "email": "support@nativephp.com"
+                }
+            ],
+            "description": "Native SwiftUI and Jetpack Composer components for NativePHP",
+            "support": {
+                "issues": "https://github.com/NativePHP/mobile-ui/issues",
+                "source": "https://github.com/NativePHP/mobile-ui/tree/0.6.0"
+            },
+            "funding": [
+                {
+                    "url": "https://nativephp.com/sponsor",
+                    "type": "other"
+                }
+            ],
+            "time": "2026-09-19T15:06:44+00:00"
         },
         {
             "name": "nesbot/carbon",
@@ -9875,7 +9841,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "ikromjon/nativephp-mobile-local-notifications": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
